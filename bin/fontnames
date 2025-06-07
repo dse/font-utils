@@ -1,0 +1,87 @@
+#!/usr/bin/env -S python
+# -*- mode: python; coding: utf-8 -*-
+###################################!/usr/bin/env -S fontforge -quiet
+
+import os, sys
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
+from font_utils import silence
+
+silence()
+import fontforge
+silence(False)
+
+import argparse, csv, json, yaml
+from operator import itemgetter
+
+from font_utils import table, flatten, tsv_value_escape, csv_value_escape, table_keys, table_dict
+
+def main():
+    global args
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filenames', nargs='+', metavar='filename')
+    parser.add_argument('--format', choices=['csv','tsv','text','table','jsonl','json','yaml'], default='text')
+    parser.add_argument('--csv',           dest='format', action='store_const', const='csv')
+    parser.add_argument('--text',          dest='format', action='store_const', const='text')
+    parser.add_argument('--tsv',           dest='format', action='store_const', const='tsv')
+    parser.add_argument('--table',         dest='format', action='store_const', const='table')
+    parser.add_argument('--jsonl',         dest='format', action='store_const', const='jsonl')
+    parser.add_argument('--json',          dest='format', action='store_const', const='json')
+    parser.add_argument('--yaml', '--yml', dest='format', action='store_const', const='yaml')
+    parser.add_argument('--verbose', '-v', action='count')
+    args = parser.parse_args()
+    rows = []
+    for filename in args.filenames:
+        if not args.verbose:
+            silence()
+        try:
+            font = fontforge.open(filename)
+        except OSError as e:
+            if e.args[0] != "Open failed":
+                raise
+            if not args.verbose:
+                silence(False)
+            continue
+        if not args.verbose:
+            silence(False)
+        values = {
+            "filename": filename,
+            "psFontName": font.fontname,
+            "psFullName": font.fullname,
+            "psFamilyName": font.familyname,
+            "psWeight": font.weight,
+            "em": str(font.em),
+            "ascent": str(font.ascent),
+            "descent": str(font.descent),
+            "capHeight": str(font.capHeight),
+            "xHeight": str(font.xHeight),
+            "italicAngle": str(font.italicangle),
+            "os2FamilyClass": str(font.os2_family_class),
+            "os2Panose": str(font.os2_panose),
+            "os2Weight": str(font.os2_weight),
+        }
+        rows.append(values)
+        font.close()
+    field_names = table_keys(rows)
+    if args.format == 'csv':
+        print(",".join([csv_value_escape(k) for k in field_names]))
+        for row in rows:
+            print(",".join([csv_value_escape(row[k]) if k in row else "" for k in field_names]))
+    if args.format == 'text':
+        for row in rows:
+            print("%s:" % row["filename"])
+            for k in [key for key in row.keys() if key != "filename" and key in row]:
+                print("    %s: %s" % (k, row[k]))
+    if args.format == 'tsv':
+        print("\t".join([tsv_value_escape(k) for k in field_names]))
+        for row in rows:
+            print("\t".join([tsv_value_escape(row[k]) if k in row else "" for k in field_names]))
+    if args.format == 'table':
+        print(table_dict(rows))
+    if args.format == 'jsonl':
+        for row in rows:
+            print(json.dumps(row, separators=(',', ':')))
+    if args.format == 'json':
+        print(json.dumps(rows, indent=4))
+    if args.format == 'yaml':
+        print(yaml.dumps(rows))
+main()
