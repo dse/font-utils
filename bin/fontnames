@@ -82,7 +82,7 @@ def main():
             "os2Panose": str(font.os2_panose),
             "os2Weight": str(font.os2_weight),
         }
-        if args.format in ['table', 'json', 'yml']:
+        if args.format in ['table', 'json', 'yaml']:
             rows.append(row)
         font.close()
 
@@ -101,7 +101,7 @@ def main():
         print(table_dict(rows))
     elif args.format == 'json':
         print(json.dumps(rows, indent=4))
-    elif args.format == 'yml':
+    elif args.format == 'yaml':
         print(yaml.dumps(rows))
 
 main()
