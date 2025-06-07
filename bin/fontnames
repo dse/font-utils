@@ -29,6 +29,29 @@ def main():
     parser.add_argument('--yaml', '--yml', dest='format', action='store_const', const='yaml')
     parser.add_argument('--verbose', '-v', action='count')
     args = parser.parse_args()
+
+    field_names = [
+        "filename",
+        "psFontName",
+        "psFullName",
+        "psFamilyName",
+        "psWeight",
+        "em",
+        "ascent",
+        "descent",
+        "capHeight",
+        "xHeight",
+        "italicAngle",
+        "os2FamilyClass",
+        "os2Panose",
+        "os2Weight",
+    ]
+
+    if args.format == 'csv':
+        print(",".join([csv_value_escape(k) for k in field_names]))
+    elif args.format == 'tsv':
+        print("\t".join([tsv_value_escape(k) for k in field_names]))
+
     rows = []
     for filename in args.filenames:
         if not args.verbose:
@@ -43,7 +66,7 @@ def main():
             continue
         if not args.verbose:
             silence(False)
-        values = {
+        row = {
             "filename": filename,
             "psFontName": font.fontname,
             "psFullName": font.fullname,
@@ -59,29 +82,26 @@ def main():
             "os2Panose": str(font.os2_panose),
             "os2Weight": str(font.os2_weight),
         }
-        rows.append(values)
+        if args.format in ['table', 'json', 'yml']:
+            rows.append(row)
         font.close()
-    field_names = table_keys(rows)
-    if args.format == 'csv':
-        print(",".join([csv_value_escape(k) for k in field_names]))
-        for row in rows:
+
+        if args.format == 'csv':
             print(",".join([csv_value_escape(row[k]) if k in row else "" for k in field_names]))
-    if args.format == 'text':
-        for row in rows:
+        elif args.format == 'tsv':
+            print("\t".join([tsv_value_escape(row[k]) if k in row else "" for k in field_names]))
+        elif args.format == 'text':
             print("%s:" % row["filename"])
             for k in [key for key in row.keys() if key != "filename" and key in row]:
                 print("    %s: %s" % (k, row[k]))
-    if args.format == 'tsv':
-        print("\t".join([tsv_value_escape(k) for k in field_names]))
-        for row in rows:
-            print("\t".join([tsv_value_escape(row[k]) if k in row else "" for k in field_names]))
+        elif args.format == 'jsonl':
+            print(json.dumps(row, separators=(',', ':')))
+
     if args.format == 'table':
         print(table_dict(rows))
-    if args.format == 'jsonl':
-        for row in rows:
-            print(json.dumps(row, separators=(',', ':')))
-    if args.format == 'json':
+    elif args.format == 'json':
         print(json.dumps(rows, indent=4))
-    if args.format == 'yaml':
+    elif args.format == 'yml':
         print(yaml.dumps(rows))
+
 main()
