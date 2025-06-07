@@ -92,7 +92,7 @@ def main():
             print("\t".join([tsv_value_escape(row[k]) if k in row else "" for k in field_names]))
         elif args.format == 'text':
             print("%s:" % row["filename"])
-            for k in [key for key in row.keys() if key != "filename" and key in row]:
+            for k in [key for key in row.keys() if key != "filename" and key in row and row[key] is not None]:
                 print("    %s: %s" % (k, row[k]))
         elif args.format == 'jsonl':
             print(json.dumps(row, separators=(',', ':')))
