@@ -1,4 +1,4 @@
-import os
+import os, re
 
 def table(field_names, rows):
     if type(field_names) == list and type(rows) == list:
@@ -55,3 +55,10 @@ def silence(flag=True):
     else:
         os.dup2(stderr_fd, 2)
 
+def camel_case(str):
+    str = re.sub(r'^[^A-Za-z0-9]+', '', str)
+    str = re.sub(r'[^A-Za-z0-9]+$', '', str)
+    str = re.sub(r'\'+', '', str)
+    words = re.split(r'[^A-Za-z0-9]+', str)
+    words = [words[i].lower() if i == 0 else words[i][0].upper() + words[i][1:] for i in range(0, len(words))]
+    return "".join(words)
