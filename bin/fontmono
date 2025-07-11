@@ -1,0 +1,125 @@
+#!/usr/bin/env -S python
+# -*- mode: python; coding: utf-8 -*-
+###################################!/usr/bin/env -S fontforge -quiet
+
+import os, sys
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
+from font_utils import silence, open_font, u
+
+silence()
+import fontforge
+silence(False)
+
+import argparse, font_panose_data
+
+def main():
+    global args
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filenames', nargs='+', metavar='filename')
+    parser.add_argument('--basename', '-b', action='store_true')
+    parser.add_argument('--verbose', '-v', action='count', default=0)
+    args = parser.parse_args()
+
+    if args.basename:
+        max_filename_len = max([len(os.path.basename(filename)) for filename in args.filenames])
+    else:
+        max_filename_len = max([len(filename) for filename in args.filenames])
+
+    for filename in args.filenames:
+        font = open_font(filename, args.verbose)
+        if not font:
+            continue
+
+        display_filename = os.path.basename(filename) if args.basename else filename
+        print("%-*s:" % (max_filename_len, display_filename), end='')
+            
+        glyphs = [glyph for glyph in font.glyphs() if not glyph_exclude(glyph)]
+        widths = list(set([glyph.width for glyph in glyphs]))
+        non_zero_widths = list(set([glyph.width for glyph in glyphs if glyph.width != 0]))
+        widths.sort()
+        non_zero_widths.sort()
+        glyphs_of_width = {}
+        width_counts = {}
+
+        for width in widths:
+            glyphs_of_width[width] = [glyph for glyph in glyphs if glyph.width == width]
+            width_counts[width] = len(glyphs_of_width[width])
+
+        panose_is_good = font_panose_is_good(font)
+
+        if len(widths) == 1:
+            print(" YES (1 width)             ", end='')
+        elif len(widths) == 2 and widths[0] == 0:
+            print(" *** ??? (1 non-zero width)", end='')
+        elif len(widths) == 2 and (widths[0] / widths[1]) >= 0.95 and (widths[0] / widths[1]) <= 1.05:
+            print(" *** ??? (2 close widths)  ", end='')
+        elif len(widths) == 3 and widths[0] == 0 and abs(widths[2] - widths[1] * 2) < 2:
+            print(" *** ??? (dual)            ", end='')
+        elif panose_is_good:
+            print(" *** ??? (panose is good)  ", end='')
+        else:
+            print(" *** NO                    ", end='')
+
+        if not font_panose_is_good(font):
+            print(" (bad panose values: %s)" % repr(font.os2_panose), end='')
+
+        print()
+
+        if (args.verbose):
+            max_glyph_name_width = max([len(glyph.glyphname) for glyph in glyphs])
+            if (len(widths) <= 3 and len(args.filenames) == 1) or (len(widths) <= 3 and args.verbose >= 2):
+                for width in widths:
+                    print("    %4d" % width)
+                    for glyph in [glyph for glyph in glyphs if glyph.width == width]:
+                        print("        %4d %-*s %-8s [%s]" % (glyph.width, max_glyph_name_width, glyph.glyphname, u(glyph.unicode), repr(glyph.altuni)))
+            elif len(widths) <= 3:
+                for width in widths:
+                    print("    %4d: %4d" % (width, width_counts[width]))
+            elif len(widths) < 8:
+                print("    widths: %s" % repr(widths))
+            else:
+                print("    width count: %d" % len(widths))
+                        
+        font.close()
+
+def glyph_exclude(glyph):
+    if glyph.glyphname == ".notdef" and glyph.unicode <= 0:
+        return True
+    if glyph.glyphname == ".null" and glyph.unicode <= 0 and glyph.width == 0:
+        return True
+    return False
+
+FIELD_FAMILY_KIND = 0
+
+FK_LATIN_TEXT = 2
+FK_HANDWRITTEN = 3
+FK_DECORATIVE = 4
+FK_SYMBOL = 5
+FK_ANY = 0
+
+FIELD_LATIN_TEXT_PROPORTION = 3
+FIELD_HANDWRITTEN_SPACING = 3
+FIELD_DECORATIVE_ASPECT = 3
+FIELD_SYMBOL_SPACING = 3
+FIELD_ANY_PROPORTION = 3
+
+LATIN_TEXT_MONOSPACED = 9
+LATIN_HANDWRITTEN_MONOSPACED = 3
+LATIN_DECORATIVE_MONOSPACED = 9
+LATIN_SYMBOL_SPACING_MONOSPACED = 3
+ANY_MONOSPACED = 9
+
+def font_panose_is_good(font):
+    if font.os2_panose[FIELD_FAMILY_KIND] == FK_LATIN_TEXT and font.os2_panose[FIELD_LATIN_TEXT_PROPORTION] == LATIN_TEXT_MONOSPACED:
+        return True
+    if font.os2_panose[FIELD_FAMILY_KIND] == FK_HANDWRITTEN and font.os2_panose[FIELD_HANDWRITTEN_SPACING] == LATIN_HANDWRITTEN_MONOSPACED:
+        return True
+    if font.os2_panose[FIELD_FAMILY_KIND] == FK_DECORATIVE and font.os2_panose[FIELD_DECORATIVE_ASPECT] == LATIN_DECORATIVE_MONOSPACED:
+        return True
+    if font.os2_panose[FIELD_FAMILY_KIND] == FK_SYMBOL and font.os2_panose[FIELD_SYMBOL_SPACING] == LATIN_SYMBOL_SPACING_MONOSPACED:
+        return True
+    if font.os2_panose[FIELD_FAMILY_KIND] == FK_ANY and font.os2_panose[FIELD_ANY_PROPORTION] == ANY_MONOSPACED:
+        return True
+    return False
+
+main()
