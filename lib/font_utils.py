@@ -67,6 +67,8 @@ def open_font(filename, verbose=False, flags=()):
     if verbose <= MAX_VERBOSE_SILENT:
         silence()
     try:
+        if verbose:
+            print("Opening %s" % filename)
         font = fontforge.open(filename, flags)
     except OSError as e:
         if e.args[0] != "Open failed":
@@ -83,12 +85,15 @@ def u(codepoint):
         return "%-8d" % codepoint
     return "U+%04X" % codepoint
 
-def save_font(font, dest_filename):
-    global opts
-    _, ext = os.path.splitext(dest_filename)
+def save_font(font, dest_filename, verbose=False):
+    (_, ext) = os.path.splitext(dest_filename)
     if ext == '.sfd':
+        if verbose:
+            print("Saving %s" % dest_filename)
         font.save(dest_filename)
     else:
+        if verbose:
+            print("Generating %s" % dest_filename)
         font.generate(dest_filename)
 
 def compute_dest_filename(source_filename, dest_filename, font_name=None):
