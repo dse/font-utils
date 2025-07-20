@@ -63,14 +63,12 @@ def camel_case(str):
 MAX_VERBOSE_SILENT = 2
 
 def open_font(filename, verbose=False, flags=()):
-    if type(verbose) == bool:
-        verbose = 1 if verbose else 0
+    verbose = int(verbose)
     if verbose <= MAX_VERBOSE_SILENT:
         silence()
     try:
         font = fontforge.open(filename, flags)
     except OSError as e:
-        print(e)
         if e.args[0] != "Open failed":
             raise
         if verbose <= MAX_VERBOSE_SILENT:
