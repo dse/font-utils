@@ -1,4 +1,5 @@
 import os, re
+from silence import silence
 
 def table(field_names, rows):
     if type(field_names) == list and type(rows) == list:
@@ -46,14 +47,6 @@ def csv_value_escape(str):
         return str
     str = str.replace('"', '""')
     return '"' + str + '"'
-
-stderr_fd = os.dup(2)
-def silence(flag=True):
-    global stderr_fd
-    if flag:
-        os.close(2)
-    else:
-        os.dup2(stderr_fd, 2)
 
 def camel_case(str):
     str = re.sub(r'^[^A-Za-z0-9]+', '', str)
