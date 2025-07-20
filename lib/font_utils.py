@@ -62,3 +62,26 @@ def camel_case(str):
     words = re.split(r'[^A-Za-z0-9]+', str)
     words = [words[i].lower() if i == 0 else words[i][0].upper() + words[i][1:] for i in range(0, len(words))]
     return "".join(words)
+
+def open_font(filename, verbose=False, flags=()):
+    if type(verbose) == bool:
+        verbose = 1 if verbose else 0
+    if verbose <= MAX_VERBOSE_SILENT:
+        silence()
+    try:
+        font = fontforge.open(filename, flags)
+    except OSError as e:
+        print(e)
+        if e.args[0] != "Open failed":
+            raise
+        if verbose <= MAX_VERBOSE_SILENT:
+            silence(False)
+        return
+    if verbose <= MAX_VERBOSE_SILENT:
+        silence(False)
+    return font
+
+def u(codepoint):
+    if codepoint < 0:
+        return "%-8d" % codepoint
+    return "U+%04X" % codepoint
