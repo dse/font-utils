@@ -90,3 +90,18 @@ def save_font(font, dest_filename):
         font.save(dest_filename)
     else:
         font.generate(dest_filename)
+
+def compute_dest_filename(source_filename, dest_filename, font_name=None):
+    (source_dirname, source_basename) = os.path.split(source_filename)
+    (source_basename_root, source_ext) = os.path.splitext(source_basename)
+    if re.fullmatch(r'\.[^./]+', dest_filename):
+        basename_root = font_name if font_name is not None else source_basename_root
+        return os.path.join(source_filename, basename_root + dest_filename)
+    if font_name is not None:
+        if dest_filename.find('{}') >= 0:
+            return dest_filename.replace("{}", font_name, 1)
+        raise Exception("""\
+When converting from font collection files, each destination filename must
+either be an extension (e.g., '.ttf') or a filename containing at least one
+occurrence of '{}' (e.g., '/home/xyz/{}.ttf')""")
+    return dest_filename
