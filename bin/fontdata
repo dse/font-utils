@@ -10,13 +10,15 @@ def main():
         font = open_font(filename)
         if font is None:
             continue
-        font_data = {
+        font_data = {}
+        font_data.update({
             "familyName": font.familyname,
             "fondName": font.fondname,
             "fontName": font.fontname,
             "fullName": font.fullname,
             "weight": font.weight,
-
+        })
+        font_data.update({
             "uniqueId": font.uniqueid,
             "version": font.version,
             "sfntRevision": {
@@ -24,11 +26,13 @@ def main():
                 "cooked": ("%.3f" % font.sfntRevision),
                 "numeric": round(font.sfntRevision * 1000) / 1000,
             },
-
+        })
+        font_data.update({
             "comment": font.comment,
             "copyright": font.copyright,
             "fontLog": font.fontlog,
-
+        })
+        font_data.update({
             "macStyle": {
                 "numeric":     font.macstyle,
                 "bold":        bool(font.macstyle & 0x01),
@@ -40,13 +44,16 @@ def main():
                 "extended":    bool(font.macstyle & 0x40),
                 "reservedBit": bool(font.macstyle & 0x80),
             },
+        })
+        font_data.update({
             "familyClass": font.os2_family_class,
             "fsType": font.os2_fstype,
             "styleMap": font.os2_stylemap,
             "panose": font.os2_panose,
             "os2Weight": font.os2_weight,
             "os2Width": font.os2_width,
-
+        })
+        font_data.update({
             "metrics": {
                 "ascent": font.ascent,
                 "capHeight": font.capHeight,
@@ -94,7 +101,8 @@ def main():
             "vhea": {
                 "linegap": font.vhea_linegap,
             },
-
+        })
+        font_data.update({
             "isCid": font.is_cid,
             "cid": {
                 "copyright": font.cidcopyright,
@@ -110,7 +118,8 @@ def main():
                 "version": font.cidversion,
                 "weight": font.cidweight,
             },
-
+        })
+        font_data.update({
             "encoding": font.encoding,
             "hasVMetrics": font.hasvmetrics,
             "headOptimizedForCleartype": font.head_optimized_for_cleartype,
@@ -129,40 +138,43 @@ def main():
             "woffMajor": font.woffMajor,
             "woffMinor": font.woffMinor,
             "woffMetadata": font.woffMetadata,
-            # "activeLayer": font.activeLayer,
-            # "bitmapSizes": font.bitmapSizes,
-            # "changed": font.changed,
-            # "cvt": font.cvt, # not JSON serializable
-            # "default_base_filename": font.default_base_filename,
-            # "gasp": font.gasp,
-            # "gasp_version": font.gasp_version,
-            # "gpos_lookups": font.gpos_lookups,
-            # "gsub_lookups": font.gsub_lookups,
-            # "guide": font.guide,
-            # "isnew": font.isnew,
-            # "layer_cnt": font.layer_cnt,
-            # "layers": font.layers,
-            # "loadState": font.loadState,
-            # "maxp_FDEFs": font.maxp_FDEFs,
-            # "maxp_IDEFs": font.maxp_IDEFs,
-            # "maxp_maxStackDepth": font.maxp_maxStackDepth,
-            # "maxp_storageCnt": font.maxp_storageCnt,
-            # "maxp_twilightPtCnt": font.maxp_twilightPtCnt,
-            # "maxp_zones": font.maxp_zones,
-            # "multilayer": font.multilayer,
-            # "path": font.path,
-            # "persistent": font.persistent,
-            # "math": font.math,
-            # "private": font.private,
-            # "privateState": font.privateState,
-            # "selection": font.selection,
-            # "sfd_path": font.sfd_path,
-            # "sfnt_names": font.sfnt_names,
-            # "size_feature": font.size_feature,
-            # "temporary": font.temporary,
-            # "texparameters": font.texparameters,
-            # "userdata": font.userdata,
-        }
+        })
+        if False:
+            font_data.update({
+                "activeLayer": font.activeLayer,
+                "bitmapSizes": font.bitmapSizes,
+                "changed": font.changed,
+                # "cvt": font.cvt, # not JSON serializable
+                "default_base_filename": font.default_base_filename,
+                "gasp": font.gasp,
+                "gasp_version": font.gasp_version,
+                "gpos_lookups": font.gpos_lookups,
+                "gsub_lookups": font.gsub_lookups,
+                "guide": font.guide,
+                "isnew": font.isnew,
+                "layer_cnt": font.layer_cnt,
+                "layers": font.layers,
+                "loadState": font.loadState,
+                "maxp_FDEFs": font.maxp_FDEFs,
+                "maxp_IDEFs": font.maxp_IDEFs,
+                "maxp_maxStackDepth": font.maxp_maxStackDepth,
+                "maxp_storageCnt": font.maxp_storageCnt,
+                "maxp_twilightPtCnt": font.maxp_twilightPtCnt,
+                "maxp_zones": font.maxp_zones,
+                "multilayer": font.multilayer,
+                "path": font.path,
+                "persistent": font.persistent,
+                "math": font.math,
+                "private": font.private,
+                "privateState": font.privateState,
+                "selection": font.selection,
+                "sfd_path": font.sfd_path,
+                "sfnt_names": font.sfnt_names,
+                "size_feature": font.size_feature,
+                "temporary": font.temporary,
+                "texparameters": font.texparameters,
+                "userdata": font.userdata,
+            })
         print(json.dumps(font_data, indent=4))
         font.close()
 
