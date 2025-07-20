@@ -1,0 +1,52 @@
+#!/usr/bin/env -S python
+# -*- mode: python; coding: utf-8 -*-
+
+import os, sys, argparse
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
+from font_utils import silence, open_font
+
+silence()
+import fontforge
+silence(False)
+
+def main():
+    global args
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filenames', nargs='+', metavar='filename')
+    parser.add_argument('-b', '--basename', action='store_true')
+    parser.add_argument('-n', '--dry-run', action='store_true')
+    args = parser.parse_args()
+
+    if args.basename:
+        max_filename_len = max([len(os.path.basename(filename)) for filename in args.filenames])
+    else:
+        max_filename_len = max([len(filename) for filename in args.filenames])
+
+    fonts_data = []
+    fontname_count = {}
+
+    for filename in args.filenames:
+        font = open_font(filename)
+        if font is None:
+            continue
+
+        font_data = { "filename": filename }
+
+        (dirname, basename) = os.path.split(filename)
+        (baseroot, baseext) = os.path.splitext(basename)
+
+        new_filename = dirname + "/" + font.fontname + baseext
+        print(new_filename)
+
+        if font.fontname not in fontname_count:
+            fontname_count[font.fontname] = 0
+        fontname_count[font.fontname] += 1
+        if fontname_count[font.fontname] >= 2:
+            print("WARNING: duplicate fonts with psname %s" % repr(font.fontname))
+
+        font.close()
+
+    for key in [key for key in list(fontname_count) if fontname_count[key] > 1]:
+        print("WARNING: duplicate fonts with postscript font name %s" % repr(font.fontname))
+
+main()

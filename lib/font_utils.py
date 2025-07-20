@@ -1,4 +1,9 @@
 import os, re
+from silence import silence
+
+silence()
+import fontforge
+silence(False)
 
 def table(field_names, rows):
     if type(field_names) == list and type(rows) == list:
@@ -47,14 +52,6 @@ def csv_value_escape(str):
     str = str.replace('"', '""')
     return '"' + str + '"'
 
-stderr_fd = os.dup(2)
-def silence(flag=True):
-    global stderr_fd
-    if flag:
-        os.close(2)
-    else:
-        os.dup2(stderr_fd, 2)
-
 def camel_case(str):
     str = re.sub(r'^[^A-Za-z0-9]+', '', str)
     str = re.sub(r'[^A-Za-z0-9]+$', '', str)
@@ -62,3 +59,28 @@ def camel_case(str):
     words = re.split(r'[^A-Za-z0-9]+', str)
     words = [words[i].lower() if i == 0 else words[i][0].upper() + words[i][1:] for i in range(0, len(words))]
     return "".join(words)
+
+MAX_VERBOSE_SILENT = 2
+
+def open_font(filename, verbose=False, flags=()):
+    if type(verbose) == bool:
+        verbose = 1 if verbose else 0
+    if verbose <= MAX_VERBOSE_SILENT:
+        silence()
+    try:
+        font = fontforge.open(filename, flags)
+    except OSError as e:
+        print(e)
+        if e.args[0] != "Open failed":
+            raise
+        if verbose <= MAX_VERBOSE_SILENT:
+            silence(False)
+        return
+    if verbose <= MAX_VERBOSE_SILENT:
+        silence(False)
+    return font
+
+def u(codepoint):
+    if codepoint < 0:
+        return "%-8d" % codepoint
+    return "U+%04X" % codepoint
