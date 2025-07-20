@@ -82,3 +82,11 @@ def u(codepoint):
     if codepoint < 0:
         return "%-8d" % codepoint
     return "U+%04X" % codepoint
+
+def save_font(font, dest_filename):
+    global opts
+    _, ext = os.path.splitext(dest_filename)
+    if ext == '.sfd':
+        font.save(dest_filename)
+    else:
+        font.generate(dest_filename)
