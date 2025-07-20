@@ -1,6 +1,10 @@
 import os, re
 from silence import silence
 
+silence()
+import fontforge
+silence(False)
+
 def table(field_names, rows):
     if type(field_names) == list and type(rows) == list:
         strs = []
