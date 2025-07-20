@@ -56,6 +56,8 @@ def camel_case(str):
     words = [words[i].lower() if i == 0 else words[i][0].upper() + words[i][1:] for i in range(0, len(words))]
     return "".join(words)
 
+MAX_VERBOSE_SILENT = 2
+
 def open_font(filename, verbose=False, flags=()):
     if type(verbose) == bool:
         verbose = 1 if verbose else 0
