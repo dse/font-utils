@@ -195,6 +195,26 @@ def get_font_data(font):
             "texparameters": font.texparameters,
             "userdata": font.userdata,
         })
+
+    glyphs_list_data = []
+    glyphs_data = { "glyphList": glyphs_list_data }
+    for glyph in font.glyphs():
+        glyph_data = {
+            "codepoint": glyph.unicode,
+            "name": glyph.glyphname,
+            "realCodepoint": real_codepoint(glyph),
+        }
+        glyphs_list_data.append(glyph_data)
+    font_data["glyphs"] = glyphs_data
     return font_data
+
+def real_codepoint(glyph):
+    if glyph.unicode >= 0:
+        return glyph.unicode
+    glyph_name = glyph.glyphname
+    idx = glyph_name.find(".")
+    if idx >= 1:
+        glyph_name = glyph_name[0:idx]
+    return fontforge.unicodeFromName(glyph_name)
 
 main()
