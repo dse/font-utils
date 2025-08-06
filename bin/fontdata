@@ -1,6 +1,6 @@
 #!/usr/bin/env -S python
 # -*- mode: python; coding: utf-8 -*-
-import os, sys, argparse, optparse, re, json
+import os, sys, argparse, optparse, re, json, unicodedata
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
 from font_utils import open_font
 import fontforge
@@ -18,7 +18,8 @@ def main():
                 font_data["filename"] = filename
                 font_data["isCollection"] = True
                 font_data["collectionItem"] = font_name
-                print(json.dumps(font_data, indent=4))
+                file_data = { "fontData": font_data }
+                print(json.dumps(file_data, indent=4))
         else:
             font = open_font(filename)
             if font is None:
@@ -27,7 +28,8 @@ def main():
             font.close()
             font_data["filename"] = filename
             font_data["isCollection"] = False
-            print(json.dumps(font_data, indent=4))
+            file_data = { "fontData": font_data }
+            print(json.dumps(file_data, indent=4))
 
 def get_font_data(font):
     font_data = {}
@@ -197,15 +199,30 @@ def get_font_data(font):
         })
 
     glyphs_list_data = []
-    glyphs_data = { "glyphList": glyphs_list_data }
+    font_data.update({
+        "glyphList": glyphs_list_data
+    });
     for glyph in font.glyphs():
+        real_cp = real_codepoint(glyph)
+        hex = "U+%04X" % real_cp if real_cp >= 0 else None
         glyph_data = {
             "codepoint": glyph.unicode,
-            "name": glyph.glyphname,
-            "realCodepoint": real_codepoint(glyph),
+            "glyphName": glyph.glyphname,
+            "realCodepoint": real_cp,
         }
+        if real_cp >= 0:
+            glyph_data.update({
+                "char": chr(real_cp),
+                "unicodeHex": "U+%04X" % real_cp,
+            });
+            try:
+                name = unicodedata.name(chr(real_cp))
+                glyph_data.update({
+                    "name": name,
+                });
+            except ValueError:
+                pass
         glyphs_list_data.append(glyph_data)
-    font_data["glyphs"] = glyphs_data
     return font_data
 
 def real_codepoint(glyph):
