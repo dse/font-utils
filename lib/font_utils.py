@@ -63,7 +63,10 @@ def camel_case(str):
 MAX_VERBOSE_SILENT = 2
 
 def open_font(filename, verbose=False, flags=()):
-    verbose = int(verbose)
+    if verbose is None:
+        verbose = False
+    else:
+        verbose = int(verbose)
     if verbose <= MAX_VERBOSE_SILENT:
         silence()
     try:
