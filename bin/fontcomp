@@ -1,0 +1,78 @@
+#!/usr/bin/env -S fontforge -quiet
+# -*- mode: python; coding: utf-8 -*-
+#####################################
+import os, sys, re
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
+from font_utils import silence, open_font
+silence()
+import fontforge
+silence(False)
+import argparse
+def main():
+
+    # Each argument is either a filename or a character name.  We may
+    # have to improve this code that guess which is which.  Right now
+    # I'm assuming that common filename extensions aren't common glyph
+    # names
+    args = sys.argv[1:]
+    filenames = []
+    charnames = []
+    for arg in args:
+        if re.search('\.(sfd|ttf|otf|woff|woff2)$', arg, re.IGNORECASE):
+            print("filename: %s" % arg)
+            filenames.append(arg)
+        else:
+            print("charname: %s" % arg)
+            charnames.append(arg)
+
+    # Argument sanity checking.
+    if len(filenames) == 0 and len(charnames) == 0:
+        raise Exception("no filenames or charnames specified")
+    if len(filenames) == 0:
+        raise Exception("no filenames specified")
+    if len(charnames) == 0:
+        raise Exception("no charnames specified")
+
+    # This, the comp_font, will be the font we write.  It's a blank
+    # font with characteristics from the first font but none of the
+    # glyphs.
+    print("Creating compfont from %s ..." % filenames[0])
+    comp_font = open_font(filenames[0])
+    comp_font.save("compfont.sfd")
+
+    comp_font_glyph_names = [glyph.glyphname for glyph in comp_font.glyphs()]
+    print("Removing glyphs from compfont ...")
+    for glyph_name in comp_font_glyph_names:
+        comp_font.removeGlyph(glyph_name)
+
+    # Create glyphs for the comp_font.
+    print("Creating new glyphs in the compfont ...")
+    comp_glyphs = {}
+    for filename in filenames:
+        comp_glyphs[filename] = {}
+    for charname in charnames:
+        for i in range(0, len(filenames)):
+            filename = filenames[i]
+            new_name = "%s.%03d" % (charname, i + 1)
+            glyph = comp_font.createChar(-1, new_name)
+            comp_glyphs[filename][charname] = glyph
+
+    # Pull glyphs from all the fonts.
+    for i in range(0, len(filenames)):
+        filename = filenames[i]
+        print("Opening %s" % filename)
+        font = open_font(filename)
+        for charname in charnames:
+            if charname in font:
+                font.selection.select(charname)
+                font.copy()
+                comp_font.selection.select(comp_glyphs[filename][charname])
+                comp_font.paste()
+        print("Closing %s" % filename)
+        font.close()
+
+    print("Saving compfont.sfd ...")
+    comp_font.save("compfont.sfd")
+    comp_font.close()
+
+main()
