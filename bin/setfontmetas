@@ -1,0 +1,102 @@
+#!/usr/bin/env -S python
+# -*- mode: python; coding: utf-8 -*-
+###################################!/usr/bin/env -S fontforge -quiet
+
+import os, sys
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
+from font_utils import silence, open_font
+
+silence()
+import fontforge
+silence(False)
+
+import argparse
+
+def main():
+    global args
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filename', nargs='+')
+    parser.add_argument('--font-name', type=str)
+    parser.add_argument('--full-name', type=str)
+    parser.add_argument('--family-name', type=str)
+    parser.add_argument('--weight-name', type=str)
+    parser.add_argument('--copyright', type=str)
+    parser.add_argument('--panose-0', type=int, help='https://monotype.github.io/panose/pan1.htm')
+    parser.add_argument('--panose-1', type=int)
+    parser.add_argument('--panose-2', type=int)
+    parser.add_argument('--panose-3', type=int)
+    parser.add_argument('--panose-4', type=int)
+    parser.add_argument('--panose-5', type=int)
+    parser.add_argument('--panose-6', type=int)
+    parser.add_argument('--panose-7', type=int)
+    parser.add_argument('--panose-8', type=int)
+    parser.add_argument('--panose-9', type=int)
+    parser.add_argument('--unique-id', type=str)
+    parser.add_argument('--subfamily', type=str)
+    parser.add_argument('--version', type=str)
+    parser.add_argument('--sfnt-revision', type=float)
+    args = parser.parse_args()
+
+    modify_panose = (args.panose_0 is not None
+                     or args.panose_1 is not None
+                     or args.panose_2 is not None
+                     or args.panose_3 is not None
+                     or args.panose_4 is not None
+                     or args.panose_5 is not None
+                     or args.panose_6 is not None
+                     or args.panose_7 is not None
+                     or args.panose_8 is not None
+                     or args.panose_9 is not None)
+
+    for filename in args.filename:
+        font = open_font(filename)
+        panose = list(self.font.os2_panose)
+        if args.font_name is not None:
+            font.fontname = args.font_name
+        if args.full_name is not None:
+            font.fullname = args.full_name
+        if args.family_name is not None:
+            font.familyname = args.family_name
+        if args.weight_name is not None:
+            font.weight = args.weight_name
+        if args.copyright is not None:
+            font.copyright = args.copyright
+        if args.panose_0 is not None:
+            panose[0] = args.panose_0
+        if args.panose_1 is not None:
+            panose[1] = args.panose_1
+        if args.panose_2 is not None:
+            panose[2] = args.panose_2
+        if args.panose_3 is not None:
+            panose[3] = args.panose_3
+        if args.panose_4 is not None:
+            panose[4] = args.panose_4
+        if args.panose_5 is not None:
+            panose[5] = args.panose_5
+        if args.panose_6 is not None:
+            panose[6] = args.panose_6
+        if args.panose_7 is not None:
+            panose[7] = args.panose_7
+        if args.panose_8 is not None:
+            panose[8] = args.panose_8
+        if args.panose_9 is not None:
+            panose[9] = args.panose_9
+        if args.unique_id is not None:
+            font.appendSFNTName("English (US)", "UniqueID", args.unique_id)
+        if args.subfamily is not None:
+            font.appendSFNTName("English (US)", "SubFamily", args.subfamily)
+        if args.version is not None:
+            font.version = args.version
+            font.appendSFNTName("English (US)", "Version", args.version)
+        if args.sfnt_revision is not None:
+            font.sfntRevision = args.sfnt_revision
+        if modify_panose:
+            self.font.os2_panose = tuple(panose)
+
+        if filename.endswith('.sfd'):
+            font.save(filename)
+        else:
+            font.generate(filename)
+        font.close()
+
+main()
