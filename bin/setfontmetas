@@ -36,7 +36,6 @@ def main():
     parser.add_argument('--version', type=str)
     parser.add_argument('--sfnt-revision', type=float)
     parser.add_argument('--vendor', type=str)
-    parser.add_argument('--spacing', type=str)
     parser.add_argument('--monospace', action='store_true')
     args = parser.parse_args()
 
@@ -100,10 +99,7 @@ def main():
             font.os2_panose = tuple(panose)
         if args.vendor is not None:
             font.os2_vendor = args.vendor
-        if args.spacing is not None:
-            font.spacing = args.spacing.upper()
         if args.monospace:
-            font.spacing = "M"
             panose = list(font.os2_panose)
             panose[3] = 9
             font.os2_panose = tuple(panose)
