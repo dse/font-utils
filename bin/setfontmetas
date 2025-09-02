@@ -13,6 +13,30 @@ silence(False)
 import argparse
 
 def main():
+    # { "SubFamily", 2},
+    # { "Copyright", 0},
+    # { "Family", 1},
+    # { "Fullname", 4},
+    # { "UniqueID", 3},
+    # { "Version", 5},
+    # { "PostScriptName", 6},
+    # { "Trademark", 7},
+    # { "Manufacturer", 8},
+    # { "Designer", 9},
+    # { "Descriptor", 10},
+    # { "Vendor URL", 11},
+    # { "Designer URL", 12},
+    # { "License", 13},
+    # { "License URL", 14},
+    # /* slot 15 is reserved */
+    # { "Preferred Family", 16},
+    # { "Preferred Styles", 17},
+    # { "Compatible Full", 18},
+    # { "Sample Text", 19},
+    # { "CID findfont Name", 20},
+    # { "WWS Family", 21},
+    # { "WWS Subfamily", 22},
+
     global args
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', nargs='+')
@@ -20,7 +44,6 @@ def main():
     parser.add_argument('--full-name', type=str)
     parser.add_argument('--family-name', type=str)
     parser.add_argument('--weight-name', type=str)
-    parser.add_argument('--copyright', type=str)
     parser.add_argument('--panose-0', type=int, help='https://monotype.github.io/panose/pan1.htm')
     parser.add_argument('--panose-1', type=int)
     parser.add_argument('--panose-2', type=int)
@@ -37,6 +60,9 @@ def main():
     parser.add_argument('--sfnt-revision', type=float)
     parser.add_argument('--vendor', type=str)
     parser.add_argument('--monospace', action='store_true')
+    parser.add_argument('--copyright')
+    parser.add_argument('--license')
+    parser.add_argument('--license-url')
     args = parser.parse_args()
 
     modify_panose = (args.panose_0 is not None
@@ -58,14 +84,15 @@ def main():
         panose = list(font.os2_panose)
         if args.font_name is not None:
             font.fontname = args.font_name
+            font.appendSFNTName("English (US)", "PostScriptName", args.font_name)
         if args.full_name is not None:
             font.fullname = args.full_name
+            font.appendSFNTName("English (US)", "Fullname", args.full_name)
         if args.family_name is not None:
             font.familyname = args.family_name
+            font.appendSFNTName("English (US)", "Family", args.family_name)
         if args.weight_name is not None:
             font.weight = args.weight_name
-        if args.copyright is not None:
-            font.copyright = args.copyright
         if args.panose_0 is not None:
             panose[0] = args.panose_0
         if args.panose_1 is not None:
@@ -103,6 +130,13 @@ def main():
             panose = list(font.os2_panose)
             panose[3] = 9
             font.os2_panose = tuple(panose)
+        if args.copyright is not None:
+            font.appendSfntName("English (US)", "Copyright", args.copyright)
+            font.copyright = args.copyright
+        if args.license is not None:
+            font.appendSfntName("English (US)", "License", args.license)
+        if args.license_url is not None:
+            font.appendSfntName("English (US)", "License URL", args.license_url)
         if filename.endswith('.sfd'):
             font.save(filename)
         else:
