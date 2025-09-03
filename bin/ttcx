@@ -1,0 +1,55 @@
+#!/usr/bin/env -S python
+# -*- mode: python; coding: utf-8; tab-width: 4 -*-
+import os, optparse, re, sys
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
+from font_utils import open_font, save_font
+import fontforge
+def main():
+    global opts
+    parser = optparse.OptionParser()
+    parser.add_option('-n', '--dry-run', action="store_true")
+    parser.add_option('-v', '--verbose', action="count")
+    parser.add_option('-d', '--directory', action="store_true")
+    opts, filenames = parser.parse_args()
+    verbosity = (1 if opts.verbose else 0) + (1 if opts.dry_run else 0)
+    for filename in filenames:
+        ttc_font_names = fontforge.fontsInFile(filename)
+        if len(ttc_font_names) < 2:
+            if verbosity:
+                print("ttcx: %s: not a font collection" % filename)
+            continue
+        for ttc_font_name in ttc_font_names:
+            if verbosity >= 2:
+                print("ttcx: %s: opening %s" % (filename, ttc_font_name))
+            font = open_font("%s(%s)" % (filename, ttc_font_name))
+            if font is None:
+                continue
+            if opts.directory:
+                out_dirname = os.path.splitext(filename)[0]
+                if not opts.dry_run:
+                    os.makedirs(out_dirname, exist_ok=True)
+            dirname, basename = os.path.split(filename)
+            ext = os.path.splitext(basename)[1]
+            basename = re.sub(r'^\.+', '', font.fontname)
+            out_filename = os.path.join(dirname, basename + '.ttf')
+            if opts.directory:
+                out_filename = os.path.join(out_dirname, out_filename)
+            if opts.dry_run:
+                if verbosity >= 3:
+                    print("ttcx: %s(%s): would write %s" % (filename, ttc_font_name, out_filename))
+                else:
+                    print("ttcx: would write %s" % out_filename)
+                continue
+            if verbosity:
+                if verbosity >= 3:
+                    print("ttcx: %s(%s): writing %s" % (filename, ttc_font_name, out_filename))
+                else:
+                    print("ttcx: writing %s" % out_filename)
+            if ext == '.sfd':
+                print("save " + out_filename)
+                font.save(out_filename)
+            else:
+                print("generate " + out_filename)
+                font.generate(out_filename)
+            font.close()
+main()
