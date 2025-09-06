@@ -1,0 +1,35 @@
+#!/usr/bin/env -S fontforge -quiet
+# -*- mode: python; coding: utf-8 -*-
+#####################################
+
+import os, sys
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
+from font_utils import silence
+
+silence()
+import fontforge
+silence(False)
+
+import argparse
+
+def main():
+    global args
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filename')
+    parser.add_argument('vendor')
+    args = parser.parse_args()
+
+    silence()
+    font = fontforge.open(filename)
+    silence(False)
+    if font is None:
+        raise Exception("%s: no such font" % filename)
+
+    font.os2_vendor = args.vendor
+
+    if filename.endswith(".sfd"):
+        font.save(filename)
+    else:
+        font.generate(filename)
+
+main()
