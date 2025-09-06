@@ -1,4 +1,4 @@
-#!/usr/bin/env -S python
+#!/usr/bin/env fontforge
 # -*- mode: python; coding: utf-8 -*-
 
 import os, sys
@@ -48,8 +48,7 @@ def main():
         copyright_msg += "\nThis license is embedded in this font, and is also available at:"
         copyright_msg += "\n" + SIL_OFL_URL
 
-        font.copyright = copyright_msg
-        font.license = SIL_OFL_TEXT
+        font.copyright = copyright_msg + "\n\n" + SIL_OFL_TEXT
 
         font.appendSFNTName("English (US)", "Copyright", copyright_msg)
         font.appendSFNTName("English (US)", "License", SIL_OFL_TEXT)
