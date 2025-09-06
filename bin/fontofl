@@ -1,0 +1,61 @@
+#!/usr/bin/env -S python
+# -*- mode: python; coding: utf-8 -*-
+
+import os, sys
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
+from font_utils import silence
+
+silence()
+import fontforge
+silence(False)
+
+import argparse, pwd
+from font_ofl import SIL_OFL_TEXT, SIL_OFL_URL
+from font_utils import open_font
+from datetime import datetime
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filename', nargs='+')
+    parser.add_argument('--owner')
+    parser.add_argument('--url')
+    parser.add_argument('--email')
+    parser.add_argument('--reserved-font-name')
+    parser.add_argument('--year', type=int, default=datetime.now().year)
+
+    copyright_year = args.year
+    copyright_owner = args.owner
+    if copyright_owner is None:
+        copyright_owner = pwd.getpwuid(os.getuid()).pw_gecos
+    copyright_font_name = args.reserved_font_name
+
+    for filename in args.filename:
+        font = open_font(filename)
+        if font is None:
+            raise Exception("%s: no such font" % filename)
+
+        copyright_msg = "Copyright %d %s" % (copyright_year, copyright_owner)
+        if args.email is not None:
+            copyright_msg += " <%s>" % args.email
+        if args.url is not None:
+            copyright_msg += " (%s)" % args.url
+        if args.reserved_font_name is not None:
+            copyright_msg += "."
+        else:
+            copyright_msg += "with Reserved Font Name %s." % args.reserved_font_name
+        copyright_msg += "\n\nThis Font Software is licensed under the SIL Open Font License, Version 1.1."
+        copyright_msg += "\nThis license is embedded in this font, and is also available at:"
+        copyright_msg += "\n" + SIL_OFL_URL
+
+        font.copyright = copyright_msg
+        font.license = SIL_OFL_TEXT
+
+        font.appendSFNTName("English (US)", "Copyright", copyright_msg)
+        font.appendSFNTName("English (US)", "License", SIL_OFL_TEXT)
+        font.appendSFNTName("English (US)", "License URL", SIL_OFL_URL)
+
+        if filename.endswith(".sfd"):
+            font.save(filename)
+        else:
+            font.generate(filename)
+main()
