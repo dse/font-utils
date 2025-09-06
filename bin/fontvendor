@@ -19,9 +19,7 @@ def main():
     parser.add_argument('vendor')
     args = parser.parse_args()
 
-    silence()
-    font = fontforge.open(filename)
-    silence(False)
+    font = open_font(filename)
     if font is None:
         raise Exception("%s: no such font" % filename)
 
