@@ -22,6 +22,7 @@ def main():
     parser.add_argument('--email')
     parser.add_argument('--reserved-font-name')
     parser.add_argument('--year', type=int, default=datetime.now().year)
+    args = parser.parse_args()
 
     copyright_year = args.year
     copyright_owner = args.owner
