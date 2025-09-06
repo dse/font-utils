@@ -1,0 +1,63 @@
+#!/usr/bin/env -S python
+# -*- mode: python; coding: utf-8 -*-
+###################################!/usr/bin/env -S fontforge -quiet
+
+import os, sys
+from datetime import datetime
+
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
+from font_utils import silence, open_font
+from font_ofl_text import OFL_TEXT
+
+silence()
+import fontforge
+silence(False)
+
+import argparse
+
+def main():
+    global args
+    parser = argparse.ArgumentParser()
+    parser.add_argument('owner')
+    parser.add_argument('filename', nargs='+')
+    parser.add_argument('--year', type=int)
+    parser.add_argument('--email')
+    parser.add_argument('--url')
+    parser.add_argument('--reserved-font-name', '--font-name')
+    args = parser.parse_args()
+
+    year = args.year
+    if year is None:
+        year = datetime.now().year
+        
+    sfnt_copyright = "Copyright %d %s" % (year, owner)
+    if args.email is not None:
+        sfnt_copyright += " <%s>" % email
+    if args.url is not None:
+        sfnt_copyright += " (%s)" % url
+    if args.reserved_font_name is not None:
+        sfnt_copyright += "\nwith Reserved Font Name %s." % args.reserved_font_name
+    else:
+        sfnt_copyright += "."
+
+    sfnt_license = "This Font Software is licensed under the SIL Open Font License, Version 1.1."
+    sfnt_license += "\nThis license is copied below, and is also available with a FAQ at:"
+    sfnt_license += "\nhttps://openfontlicense.org/"
+    sfnt_license += "\n\n" + OFL_TEXT
+
+    for filename in args.filename:
+        font = open_font(filename)
+        if font is None:
+            raise Exception("%s: not found or not a font" % filename)
+            continue
+        font.appendSfntName("English (US)", "Copyright", sfnt_copyright)
+        font.appendSfntName("English (US)", "License", sfnt_license)
+        font.appendSfntName("English (US)", "License URL", "https://openfontlicense.org/")
+        font.copyright = sfnt_copyright + "\n\nSIL-OFL 1.1\nhttps://openfontlicense.org/")
+        if filename.endswith('.sfd'):
+            font.save(filename)
+        else:
+            font.generate(filename)
+        font.close()
+
+main()

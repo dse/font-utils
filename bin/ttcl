@@ -1,0 +1,18 @@
+#!/usr/bin/env -S python
+# -*- mode: python; coding: utf-8; tab-width: 4 -*-
+import os, optparse, re, sys
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
+from font_utils import open_font, save_font
+import fontforge
+def main():
+    global opts
+    parser = optparse.OptionParser()
+    opts, filenames = parser.parse_args()
+    for filename in filenames:
+        ttc_font_names = fontforge.fontsInFile(filename)
+        if len(ttc_font_names) < 2:
+            continue
+        print(filename + ":")
+        for ttc_font_name in ttc_font_names:
+            print("    " + ttc_font_name)
+main()
