@@ -56,7 +56,7 @@ def main():
     parser.add_argument('--panose-9', type=int)
     parser.add_argument('--unique-id', type=str)
     parser.add_argument('--subfamily', type=str)
-    parser.add_argument('--version', type=str)
+    parser.add_argument('--version', '--ps-version', type=str)
     parser.add_argument('--sfnt-revision', type=float)
     parser.add_argument('--vendor', type=str)
     parser.add_argument('--monospace', action='store_true')
