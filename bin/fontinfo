@@ -9,7 +9,7 @@ silence()
 import fontforge
 silence(False)
 
-import argparse, csv, json, yaml
+import argparse, csv, json
 from operator import itemgetter
 
 from font_utils import table, flatten, tsv_value_escape, csv_value_escape, table_keys, table_dict
@@ -21,14 +21,13 @@ def main():
     global args
     parser = argparse.ArgumentParser()
     parser.add_argument('filenames', nargs='+', metavar='filename')
-    parser.add_argument('--format', choices=['csv','tsv','text','table','jsonl','json','yaml'], default='text')
+    parser.add_argument('--format', choices=['csv','tsv','text','table','jsonl','json'], default='text')
     parser.add_argument('--csv',           dest='format', action='store_const', const='csv')
     parser.add_argument('--text',          dest='format', action='store_const', const='text')
     parser.add_argument('--tsv',           dest='format', action='store_const', const='tsv')
     parser.add_argument('--table',         dest='format', action='store_const', const='table')
     parser.add_argument('--jsonl',         dest='format', action='store_const', const='jsonl')
     parser.add_argument('--json',          dest='format', action='store_const', const='json')
-    parser.add_argument('--yaml', '--yml', dest='format', action='store_const', const='yaml')
     parser.add_argument('--verbose', '-v', action='count')
     args = parser.parse_args()
 
@@ -136,8 +135,6 @@ def main():
                 print("    %s: %s" % (k, row[k]))
         elif args.format == 'jsonl':
             print(json.dumps(row, separators=(',', ':')))
-        elif args.format == 'yaml':
-            print(yaml.dump([row]).rstrip())
 
     if args.format == 'table':
         print(table_dict(rows))
