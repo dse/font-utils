@@ -9,7 +9,7 @@ silence()
 import fontforge
 silence(False)
 
-import argparse, csv, json, yaml
+import argparse, csv, json
 from operator import itemgetter
 
 from font_utils import table, flatten, tsv_value_escape, csv_value_escape, table_keys, table_dict
