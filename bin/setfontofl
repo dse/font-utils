@@ -43,7 +43,7 @@ def main():
         if args.reserved_font_name is not None:
             copyright_msg += "."
         else:
-            copyright_msg += "with Reserved Font Name %s." % args.reserved_font_name
+            copyright_msg += " with Reserved Font Name %s." % args.reserved_font_name
         copyright_msg += "\n\nThis Font Software is licensed under the SIL Open Font License, Version 1.1."
         copyright_msg += "\nThis license is embedded in this font, and is also available at:"
         copyright_msg += "\n" + SIL_OFL_URL
