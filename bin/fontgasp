@@ -1,0 +1,23 @@
+#!/usr/bin/env -S fontforge -quiet
+# -*- mode: python; coding: utf-8 -*-
+#####################################
+import os, sys, re
+
+def main():
+    for filename in sys.argv[1:]:
+        font_names = fontforge.fontsInFile(filename)
+        if len(font_names) > 1:
+            for font_name in font_names:
+                process_font("%s(%s)" % (filename, font_name))
+        else:
+            process_font(filename)
+
+def process_font(filename):
+    font = fontforge.open(filename)
+    print("%s:" % filename)
+    print("    gasp version: %d" % font.gasp_version)
+    for entry in font.gasp:
+        print("    %s" % repr(entry))
+    font.close()
+
+main()
