@@ -43,6 +43,14 @@ def main():
                 print("    sfnt rev:             %s" % rev)
                 print("    version:              %s" % font.version)
                 print("    vendor:               %s" % font.os2_vendor)
+            elif progname == "fontmetrics":
+                print("%s:" % font_name)
+                print("    em:                   %d" % font.em)
+                print("    ascent:               %d (%.4g)" % (font.ascent, font.ascent / font.em))
+                print("    descent:              %d (%.4g)" % (font.descent, font.descent / font.em))
+                print("    cap height:           %d (%.4g)" % (font.capHeight, font.capHeight / font.em))
+                print("    ex height:            %d (%.4g)" % (font.xHeight, font.xHeight / font.em))
+                print("    italic angle:         %d" % font.italicangle)
             else:
                 raise Exception("don't know what to do when running as %s" % repr(progname))
 main()
