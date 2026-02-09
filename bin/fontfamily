@@ -21,18 +21,15 @@ def main():
         if len(fonts_in_file) < 2:
             font_hashes = [{ "filename_font": filename,
                              "basename_font": basename,
-                             "filename": filename,
-                             "basename": basename }]
+                             "filename": filename }]
         else:
             font_hashes = [{ "filename_font": "%s(%s)" % (filename, font_in_file),
                              "basename_font": "%s(%s)" % (basename, font_in_file),
                              "filename": filename,
-                             "basename": basename,
                              "font_in_file": font_in_file }
                            for font_in_file in fonts_in_file]
         for font_hash in font_hashes:
             filename = font_hash["filename"]
-            basename = font_hash["basename"]
             filename_font = font_hash["filename_font"]
             basename_font = font_hash["basename_font"]
             try:
@@ -59,21 +56,21 @@ def main():
             elif progname == "fontinfo":
                 rev = "%-.3f" % font.sfntRevision
                 print("%s:" % visible_filename_font)
-                print("    PostScript font name: %s" % font.fontname)
-                print("    full name:            %s" % font.fullname)
-                print("    family name:          %s" % font.familyname)
-                print("    weight name:          %s" % font.weight)
-                print("    version:              %s" % font.version)
-                print("    sfnt rev:             %s" % rev)
-                print("    vendor:               %s" % font.os2_vendor)
+                print("    %-36s  %s" % ("PostScript font name:", font.fontname))
+                print("    %-36s  %s" % ("full name:",            font.fullname))
+                print("    %-36s  %s" % ("family name:",          font.familyname))
+                print("    %-36s  %s" % ("weight name:",          font.weight))
+                print("    %-36s  %s" % ("version:",              font.version))
+                print("    %-36s  %s" % ("sfnt rev:",             rev))
+                print("    %-36s  %s" % ("vendor:",               font.os2_vendor))
             elif progname == "fontmetrics":
                 print("%s:" % visible_filename_font)
-                print("    em:                   %d" % font.em)
-                print("    ascent:               %d (%.4g)" % (font.ascent, font.ascent / font.em))
-                print("    descent:              %d (%.4g)" % (font.descent, font.descent / font.em))
-                print("    cap height:           %.4g (%.4g)" % (font.capHeight, font.capHeight / font.em))
-                print("    ex height:            %.4g (%.4g)" % (font.xHeight, font.xHeight / font.em))
-                print("    italic angle:         %.4g" % font.italicangle)
+                print("    %-36s  %s" % ("em:",           font.em))
+                print("    %-36s  %s" % ("ascent:",       (font.ascent, font.ascent / font.em)))
+                print("    %-36s  %s" % ("descent:",      (font.descent, font.descent / font.em)))
+                print("    %-36s  %s" % ("cap height:",   (font.capHeight, font.capHeight / font.em)))
+                print("    %-36s  %s" % ("ex height:",    (font.xHeight, font.xHeight / font.em)))
+                print("    %-36s  %s" % ("italic angle:", font.italicangle))
             else:
                 raise Exception("don't know what to do when running as %s" % repr(progname))
 
