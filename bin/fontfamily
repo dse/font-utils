@@ -3,10 +3,13 @@
 import os, sys, argparse, fontforge
 progname = os.path.basename(__file__).split(".")[0]
 def main():
-    global args
+    global args, progname
     parser = argparse.ArgumentParser()
     parser.add_argument("filenames", nargs="+")
+    parser.add_argument("--run-as", "--as")
     args = parser.parse_args()
+    if args.run_as is not None:
+        progname = args.run_as
     for filename in args.filenames:
         font_names = fontforge.fontsInFile(filename)
         if len(font_names) == 1:
@@ -26,13 +29,20 @@ def main():
             elif progname == "fontweight":
                 print("%-40s  %s" % (font.weight, font_name))
             elif progname == "fontvendor":
-                print("%-40s  %s" % (font.vendor, font_name))
+                print("%-40s  %s" % (font.os2_vendor, font_name))
             elif progname == "fontversion":
-                print("%-19s  %-19s  %s" % (
-                    "%-.3f" % font.sfntRevision,
-                    font.version,
-                    font_name,
-                ))
+                rev = "%-.3f" % font.sfntRevision
+                print("%-19s  %-19s  %s" % (rev, font.version, font_name))
+            elif progname == "fontinfo":
+                rev = "%-.3f" % font.sfntRevision
+                print("%s:" % font_name)
+                print("    PostScript font name: %s" % font.fontname)
+                print("    full name:            %s" % font.fullname)
+                print("    family name:          %s" % font.familyname)
+                print("    weight name:          %s" % font.weight)
+                print("    sfnt rev:             %s" % rev)
+                print("    version:              %s" % font.version)
+                print("    vendor:               %s" % font.os2_vendor)
             else:
                 raise Exception("don't know what to do when running as %s" % repr(progname))
 main()
