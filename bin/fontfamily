@@ -1,0 +1,38 @@
+#!/usr/bin/env -S fontforge -quiet
+# -*- mode: python; coding: utf-8 -*-
+import os, sys, argparse, fontforge
+progname = os.path.basename(__file__).split(".")[0]
+def main():
+    global args
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filenames", nargs="+")
+    args = parser.parse_args()
+    for filename in args.filenames:
+        font_names = fontforge.fontsInFile(filename)
+        if len(font_names) == 1:
+            font_names = [filename]
+        elif len(font_names) == 0:
+            font_names = [filename]
+        else:
+            font_names = ["%s(%s)" % (filename, font_name) for font_name in font_names]
+        for font_name in font_names:
+            font = fontforge.open(font_name)
+            if progname == "fontfamily":
+                print("%-40s  %s" % (font.familyname, font_name))
+            elif progname == "fontname":
+                print("%-40s  %s" % (font.fontname, font_name))
+            elif progname == "fontfullname":
+                print("%-40s  %s" % (font.fullname, font_name))
+            elif progname == "fontweight":
+                print("%-40s  %s" % (font.weight, font_name))
+            elif progname == "fontvendor":
+                print("%-40s  %s" % (font.vendor, font_name))
+            elif progname == "fontversion":
+                print("%-19s  %-19s  %s" % (
+                    "%-.3f" % font.sfntRevision,
+                    font.version,
+                    font_name,
+                ))
+            else:
+                raise Exception("don't know what to do when running as %s" % repr(progname))
+main()
