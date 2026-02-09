@@ -1,16 +1,24 @@
 #!/usr/bin/env -S fontforge -quiet
 # -*- mode: python; coding: utf-8 -*-
-import os, sys, argparse, fontforge
+import os, sys, argparse, fontforge, json, math
 progname = os.path.basename(__file__).split(".")[0]
 def main():
     global args, progname
     parser = argparse.ArgumentParser()
     parser.add_argument("filenames", nargs="+")
     parser.add_argument("--run-as", "--as")
+    parser.add_argument("--path", action="store_true")
     args = parser.parse_args()
     if args.run_as is not None:
         progname = args.run_as
+    if args.format == "table":
+        if progname not in ["fontmetrics"]:
+            raise Exception("--format=table only valid for fontmetrics")
     for filename in args.filenames:
+        if args.path:
+            visible_filename = filename
+        else:
+            visible_filename = os.path.basename(filename)
         font_names = fontforge.fontsInFile(filename)
         if len(font_names) == 1:
             font_names = [filename]
@@ -40,17 +48,18 @@ def main():
                 print("    full name:            %s" % font.fullname)
                 print("    family name:          %s" % font.familyname)
                 print("    weight name:          %s" % font.weight)
-                print("    sfnt rev:             %s" % rev)
                 print("    version:              %s" % font.version)
+                print("    sfnt rev:             %s" % rev)
                 print("    vendor:               %s" % font.os2_vendor)
             elif progname == "fontmetrics":
                 print("%s:" % font_name)
                 print("    em:                   %d" % font.em)
                 print("    ascent:               %d (%.4g)" % (font.ascent, font.ascent / font.em))
                 print("    descent:              %d (%.4g)" % (font.descent, font.descent / font.em))
-                print("    cap height:           %d (%.4g)" % (font.capHeight, font.capHeight / font.em))
-                print("    ex height:            %d (%.4g)" % (font.xHeight, font.xHeight / font.em))
-                print("    italic angle:         %d" % font.italicangle)
+                print("    cap height:           %.4g (%.4g)" % (font.capHeight, font.capHeight / font.em))
+                print("    ex height:            %.4g (%.4g)" % (font.xHeight, font.xHeight / font.em))
+                print("    italic angle:         %.4g" % font.italicangle)
             else:
                 raise Exception("don't know what to do when running as %s" % repr(progname))
+
 main()
