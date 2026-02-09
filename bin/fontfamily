@@ -8,42 +8,57 @@ def main():
     parser.add_argument("filenames", nargs="+")
     parser.add_argument("--run-as", "--as")
     parser.add_argument("--path", action="store_true")
+    parser.add_argument("--verbose", "-v", action="count", default=0)
     args = parser.parse_args()
+    is_silent = args.verbose < 2
     if args.run_as is not None:
         progname = args.run_as
-    if args.format == "table":
-        if progname not in ["fontmetrics"]:
-            raise Exception("--format=table only valid for fontmetrics")
     for filename in args.filenames:
-        if args.path:
-            visible_filename = filename
+        basename = os.path.basename(filename)
+        # visible_filename = filename if args.path else visible_filename = os.path.basename(filename)
+        fonts_in_file = fontforge.fontsInFile(filename)
+        font_hashes = None
+        if len(fonts_in_file) < 2:
+            font_hashes = [{ "filename_font": filename,
+                             "basename_font": basename,
+                             "filename": filename,
+                             "basename": basename }]
         else:
-            visible_filename = os.path.basename(filename)
-        font_names = fontforge.fontsInFile(filename)
-        if len(font_names) == 1:
-            font_names = [filename]
-        elif len(font_names) == 0:
-            font_names = [filename]
-        else:
-            font_names = ["%s(%s)" % (filename, font_name) for font_name in font_names]
-        for font_name in font_names:
-            font = fontforge.open(font_name)
+            font_hashes = [{ "filename_font": "%s(%s)" % (filename, font_in_file),
+                             "basename_font": "%s(%s)" % (basename, font_in_file),
+                             "filename": filename,
+                             "basename": basename,
+                             "font_in_file": font_in_file }
+                           for font_in_file in fonts_in_file]
+        for font_hash in font_hashes:
+            filename = font_hash["filename"]
+            basename = font_hash["basename"]
+            filename_font = font_hash["filename_font"]
+            basename_font = font_hash["basename_font"]
+            try:
+                if is_silent: silence(True)
+                font = fontforge.open(filename_font)
+            except Exception as err:
+                if is_silent: silence(False)
+                raise err
+            if is_silent: silence(True)
+            visible_filename_font = filename_font if args.path else basename_font
             if progname == "fontfamily":
-                print("%-40s  %s" % (font.familyname, font_name))
+                print("%-40s  %s" % (font.familyname, visible_filename_font))
             elif progname == "fontname":
-                print("%-40s  %s" % (font.fontname, font_name))
+                print("%-40s  %s" % (font.fontname, visible_filename_font))
             elif progname == "fontfullname":
-                print("%-40s  %s" % (font.fullname, font_name))
+                print("%-40s  %s" % (font.fullname, visible_filename_font))
             elif progname == "fontweight":
-                print("%-40s  %s" % (font.weight, font_name))
+                print("%-40s  %s" % (font.weight, visible_filename_font))
             elif progname == "fontvendor":
-                print("%-40s  %s" % (font.os2_vendor, font_name))
+                print("%-40s  %s" % (font.os2_vendor, visible_filename_font))
             elif progname == "fontversion":
                 rev = "%-.3f" % font.sfntRevision
-                print("%-19s  %-19s  %s" % (rev, font.version, font_name))
+                print("%-19s  %-19s  %s" % (rev, font.version, visible_filename_font))
             elif progname == "fontinfo":
                 rev = "%-.3f" % font.sfntRevision
-                print("%s:" % font_name)
+                print("%s:" % visible_filename_font)
                 print("    PostScript font name: %s" % font.fontname)
                 print("    full name:            %s" % font.fullname)
                 print("    family name:          %s" % font.familyname)
@@ -52,7 +67,7 @@ def main():
                 print("    sfnt rev:             %s" % rev)
                 print("    vendor:               %s" % font.os2_vendor)
             elif progname == "fontmetrics":
-                print("%s:" % font_name)
+                print("%s:" % visible_filename_font)
                 print("    em:                   %d" % font.em)
                 print("    ascent:               %d (%.4g)" % (font.ascent, font.ascent / font.em))
                 print("    descent:              %d (%.4g)" % (font.descent, font.descent / font.em))
@@ -61,5 +76,19 @@ def main():
                 print("    italic angle:         %.4g" % font.italicangle)
             else:
                 raise Exception("don't know what to do when running as %s" % repr(progname))
+
+stderr_fd = os.dup(2)
+def silence(flag=True):
+    global stderr_fd
+    if flag:
+        try:
+            os.close(2)
+        except OSError:
+            pass
+    else:
+        try:
+            os.dup2(stderr_fd, 2)
+        except OSError:
+            pass
 
 main()
