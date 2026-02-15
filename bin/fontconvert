@@ -1,43 +1,32 @@
 #!/usr/bin/env -S fontforge -quiet
 # -*- mode: python; coding: utf-8; tab-width: 4 -*-
-import os, sys, optparse
+import os, sys, argparse, re
+import operator
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
-from font_utils import open_font, save_font, compute_dest_filename
-import fontforge
+from font_utils import fonts_in
+
+args = None
 def main():
-    global opts
-    parser = optparse.OptionParser()
-    parser.add_option('-n', '--dry-run', action="store_true")
-    parser.add_option('-v', '--verbose', action="count")
-    opts, args = parser.parse_args()
-    (source_filename, *dest_filenames) = args
-    font_names = fontforge.fontsInFile(source_filename)
-    if len(font_names) > 1:
-        for font_name in font_names:
-            if opts.dry_run:
-                for dest_filename in dest_filenames:
-                    final_dest_filename = compute_dest_filename(source_filename, dest_filename, font_name=font_name)
-                    print("%s + %s (%s) => %s" % (source_filename, dest_filename, font_name, final_dest_filename))
+    global args
+    parser = argparse.ArgumentParser()
+    parser.add_argument("source_filename")
+    parser.add_argument("dest_filenames", nargs="*")
+    args = parser.parse_args()
+    getter = operator.attrgetter('font', 'filename_open', 'filename_noext', 'ttc')
+    for struct in fonts_in([args.source_filename], names=True, ttc=True):
+        (font, filename_open, filename_noext, is_ttc) = getter(struct)
+        print("%s:" % filename_open)
+        for dest_filename in args.dest_filenames:
+            is_ext = re.fullmatch(r'\.[-0-9A-Za-z_]+', dest_filename)
+            save_ext = dest_filename if is_ext else os.path.splitext(dest_filename)[1]
+            save_filename = filename_noext + save_ext  if  is_ttc or is_ext  else  dest_filename
+            if save_filename.endswith(".sfd"):
+                print("Saving %s" % save_filename)
+                font.save(save_filename)
+                print("Done.")
             else:
-                collection_virtual_filename = "%s(%s)" % (source_filename, font_name)
-                font = open_font(collection_virtual_filename, verbose=opts.verbose)
-                if font is None:
-                    raise Exception("%s: no such font" % nth_filename)
-                for dest_filename in dest_filenames:
-                    final_dest_filename = compute_dest_filename(source_filename, dest_filename, font_name=font_name)
-                    save_font(font, final_dest_filename, verbose=opts.verbose)
-                font.close()
-    else:
-        if opts.dry_run:
-            for dest_filename in dest_filenames:
-                final_dest_filename = compute_dest_filename(source_filename, dest_filename)
-                print("%s + %s => %s" % (source_filename, dest_filename, final_dest_filename))
-        else:
-            font = open_font(source_filename, verbose=opts.verbose)
-            if font is None:
-                raise Exception("%s: no such font" % nth_filename)
-            for dest_filename in dest_filenames:
-                final_dest_filename = compute_dest_filename(source_filename, dest_filename)
-                save_font(font, final_dest_filename)
-            font.close()
+                print("Generating %s" % save_filename)
+                font.generate(save_filename)
+                print("Done.")
+
 main()
