@@ -18,7 +18,7 @@ from glyph_list_secs          import SECS
 from glyph_list_mes_1         import MES_1
 from glyph_list_mes_2         import MES_2
 from glyph_list_mes_3b        import MES_3B
-from glyph_list_din_91379     import DIN_91379
+# from glyph_list_din_91379     import DIN_91379
 
 GLYPH_LISTS = [
     {
@@ -43,6 +43,7 @@ GLYPH_LISTS = [
     # },
     {
         "name": "ITC Zapf Dingbats",
+        "abbr": "Zapf Dingbats",
         "list": ZAPF_DINGBATS
     },
     {
