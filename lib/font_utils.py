@@ -1,5 +1,6 @@
 import os, re
 from silence import silence
+from types import SimpleNamespace
 
 # sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
 # from font_utils import ...
@@ -118,27 +119,56 @@ occurrence of '{}' (e.g., '/home/xyz/{}.ttf')""")
     return dest_filename
 
 is_silent = None
-def fonts_in(filenames, close=True, verbose=0, ttc=True):
+
+def fonts_in(filenames, close=True, verbose=0, ttc=True, open_font=True, names=False):
+    if not open_font and not names:
+        raise Exception("fonts_in without open_font or names does not make sense")
     global is_silent
     if is_silent is None:
         is_silent = verbose < 2
     for filename in filenames:
         fonts_in_file = fontforge.fontsInFile(filename)
-        if len(fonts_in_file) < 2:
-            font_filenames = [filename]
-        elif ttc:
-            font_filenames = ["%s(%s)" % (filename, font_in_file)
-                              for font_in_file in fonts_in_file]
-        else:
+        if (not ttc) and len(fonts_in_file) >= 2:
             raise Exception("fonts_in: .ttc files not supported when ttc=%s is specified" % repr(ttc))
-        for font_filename in font_filenames:
+        font_structs = []
+        if len(fonts_in_file) < 2:
+            font_structs = [SimpleNamespace(
+                filename=filename,
+                filename_open=filename,
+                filename_noext=os.path.splitext(filename)[0],
+                fontname=None,
+                ttc=False,
+            )]
+        else:
+            font_structs = [SimpleNamespace(
+                filename=filename,
+                filename_open="%s(%s)" % (filename, font_in_file),
+                filename_noext="%s(%s)" % (os.path.splitext(filename)[0], font_in_file),
+                fontname=font_in_file,
+                ttc=True,
+            ) for font_in_file in fonts_in_file]
+        for font_struct in font_structs:
+            if not open_font:
+                yield font_struct
+                continue
             try:
-                if is_silent: silence(True)
-                font = fontforge.open(filename)
+                if is_silent:
+                    silence(True)
+                print("Opening %s" % font_struct.filename_open)
+                font = fontforge.open(font_struct.filename_open)
+                print("Opened")
             except Exception as err:
-                if is_silent: silence(False)
+                if is_silent:
+                    silence(False)
                 raise err
-            if is_silent: silence(False)
-            yield font
+            if is_silent:
+                silence(False)
+            if names:
+                if font_struct.fontname is None:
+                    font_struct.fontname = font.fontname
+                font_struct.font = font
+                yield font_struct
+            else:
+                yield font
             if close:
                 font.close()
