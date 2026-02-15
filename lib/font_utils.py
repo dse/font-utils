@@ -1,6 +1,9 @@
 import os, re
 from silence import silence
 
+# sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
+# from font_utils import ...
+
 silence()
 import fontforge
 silence(False)
@@ -113,3 +116,29 @@ When converting from font collection files, each destination filename must
 either be an extension (e.g., '.ttf') or a filename containing at least one
 occurrence of '{}' (e.g., '/home/xyz/{}.ttf')""")
     return dest_filename
+
+is_silent = None
+def fonts_in(filenames, close=True, verbose=0, ttc=True):
+    global is_silent
+    if is_silent is None:
+        is_silent = verbose < 2
+    for filename in filenames:
+        fonts_in_file = fontforge.fontsInFile(filename)
+        if len(fonts_in_file) < 2:
+            font_filenames = [filename]
+        elif ttc:
+            font_filenames = ["%s(%s)" % (filename, font_in_file)
+                              for font_in_file in fonts_in_file]
+        else:
+            raise Exception("fonts_in: .ttc files not supported when ttc=%s is specified" % repr(ttc))
+        for font_filename in font_filenames:
+            try:
+                if is_silent: silence(True)
+                font = fontforge.open(filename)
+            except Exception as err:
+                if is_silent: silence(False)
+                raise err
+            if is_silent: silence(False)
+            yield font
+            if close:
+                font.close()
