@@ -1,0 +1,21 @@
+#!/usr/bin/env -S fontforge -quiet
+# -*- mode: python; coding: utf-8 -*-
+import os, sys, argparse, fontforge, json, math, unicodedata
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
+from font_utils import fonts_in
+
+progname = os.path.basename(__file__).split(".")[0]
+args = None
+def main():
+    global args, progname
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filenames", nargs="+")
+    parser.add_argument("--verbose", "-v", action="count", default=0)
+    args = parser.parse_args()
+
+    for font in fonts_in(args.filenames, verbose=args.verbose):
+        for glyph in font.glyphs():
+            if len(glyph.references):
+                print("%-24s  %s" % (glyph.glyphname, glyph.references))
+
+main()

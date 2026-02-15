@@ -1,0 +1,198 @@
+#!/usr/bin/env python
+#  -S fontforge -quiet
+# -*- mode: python; coding: utf-8 -*-
+#
+# MACOS?
+#
+#     /Applications/FontForge.app/Contents/Frameworks/Python.framework/Versions/3.10/bin/python3.10 -m venv ~/.fontforge.venv
+#     . ~/.fontforge.venv/bin/activate
+#     pip install prototxt-parser
+#
+import os, sys
+
+# usage: /Users/dse/.fontforge.venv/bin/python [option] ... [-c cmd | -m mod | file | -] [arg] ...
+# Options and arguments (and corresponding environment variables):
+# -b     : issue warnings about str(bytes_instance), str(bytearray_instance)
+#          and comparing bytes/bytearray with str. (-bb: issue errors)
+# -B     : don't write .pyc files on import; also PYTHONDONTWRITEBYTECODE=x
+# -c cmd : program passed in as string (terminates option list)
+# -d     : turn on parser debugging output (for experts only, only works on
+#          debug builds); also PYTHONDEBUG=x
+# -E     : ignore PYTHON* environment variables (such as PYTHONPATH)
+# -h     : print this help message and exit (also -? or --help)
+# -i     : inspect interactively after running script; forces a prompt even
+#          if stdin does not appear to be a terminal; also PYTHONINSPECT=x
+# -I     : isolate Python from the user's environment (implies -E and -s)
+# -m mod : run library module as a script (terminates option list)
+# -O     : remove assert and __debug__-dependent statements; add .opt-1 before
+#          .pyc extension; also PYTHONOPTIMIZE=x
+# -OO    : do -O changes and also discard docstrings; add .opt-2 before
+#          .pyc extension
+# -q     : don't print version and copyright messages on interactive startup
+# -s     : don't add user site directory to sys.path; also PYTHONNOUSERSITE
+# -S     : don't imply 'import site' on initialization
+# -u     : force the stdout and stderr streams to be unbuffered;
+#          this option has no effect on stdin; also PYTHONUNBUFFERED=x
+# -v     : verbose (trace import statements); also PYTHONVERBOSE=x
+#          can be supplied multiple times to increase verbosity
+# -V     : print the Python version number and exit (also --version)
+#          when given twice, print more information about the build
+# -W arg : warning control; arg is action:message:category:module:lineno
+#          also PYTHONWARNINGS=arg
+# -x     : skip first line of source, allowing use of non-Unix forms of #!cmd
+# -X opt : set implementation-specific option. The following options are available:
+#          -X faulthandler: enable faulthandler
+#          -X showrefcount: output the total reference count and number of used
+#              memory blocks when the program finishes or after each statement in the
+#              interactive interpreter. This only works on debug builds
+#          -X tracemalloc: start tracing Python memory allocations using the
+#              tracemalloc module. By default, only the most recent frame is stored in a
+#              traceback of a trace. Use -X tracemalloc=NFRAME to start tracing with a
+#              traceback limit of NFRAME frames
+#          -X importtime: show how long each import takes. It shows module name,
+#              cumulative time (including nested imports) and self time (excluding
+#              nested imports). Note that its output may be broken in multi-threaded
+#              application. Typical usage is python3 -X importtime -c 'import asyncio'
+#          -X dev: enable CPython's "development mode", introducing additional runtime
+#              checks which are too expensive to be enabled by default. Effect of the
+#              developer mode:
+#                 * Add default warning filter, as -W default
+#                 * Install debug hooks on memory allocators: see the PyMem_SetupDebugHooks()
+#                   C function
+#                 * Enable the faulthandler module to dump the Python traceback on a crash
+#                 * Enable asyncio debug mode
+#                 * Set the dev_mode attribute of sys.flags to True
+#                 * io.IOBase destructor logs close() exceptions
+#          -X utf8: enable UTF-8 mode for operating system interfaces, overriding the default
+#              locale-aware mode. -X utf8=0 explicitly disables UTF-8 mode (even when it would
+#              otherwise activate automatically)
+#          -X pycache_prefix=PATH: enable writing .pyc files to a parallel tree rooted at the
+#              given directory instead of to the code tree
+#          -X warn_default_encoding: enable opt-in EncodingWarning for 'encoding=None'
+#          -X int_max_str_digits=number: limit the size of int<->str conversions.
+#              This helps avoid denial of service attacks when parsing untrusted data.
+#              The default is sys.int_info.default_max_str_digits.  0 disables.
+#
+# --check-hash-based-pycs always|default|never:
+#     control how Python invalidates hash-based .pyc files
+# file   : program read from script file
+# -      : program read from stdin (default; interactive mode if a tty)
+# arg ...: arguments passed to program in sys.argv[1:]
+#
+# Other environment variables:
+# PYTHONSTARTUP: file executed on interactive startup (no default)
+# PYTHONPATH   : ':'-separated list of directories prefixed to the
+#                default module search path.  The result is sys.path.
+# PYTHONHOME   : alternate <prefix> directory (or <prefix>:<exec_prefix>).
+#                The default module search path uses <prefix>/lib/pythonX.X.
+# PYTHONPLATLIBDIR : override sys.platlibdir.
+# PYTHONCASEOK : ignore case in 'import' statements (Windows).
+# PYTHONUTF8: if set to 1, enable the UTF-8 mode.
+# PYTHONIOENCODING: Encoding[:errors] used for stdin/stdout/stderr.
+# PYTHONFAULTHANDLER: dump the Python traceback on fatal errors.
+# PYTHONHASHSEED: if this variable is set to 'random', a random value is used
+#    to seed the hashes of str and bytes objects.  It can also be set to an
+#    integer in the range [0,4294967295] to get hash values with a
+#    predictable seed.
+# PYTHONINTMAXSTRDIGITS: limits the maximum digit characters in an int value
+#    when converting from a string and when converting an int back to a str.
+#    A value of 0 disables the limit.  Conversions to or from bases 2, 4, 8,
+#    16, and 32 are never limited.
+# PYTHONMALLOC: set the Python memory allocators and/or install debug hooks
+#    on Python memory allocators. Use PYTHONMALLOC=debug to install debug
+#    hooks.
+# PYTHONCOERCECLOCALE: if this variable is set to 0, it disables the locale
+#    coercion behavior. Use PYTHONCOERCECLOCALE=warn to request display of
+#    locale coercion and locale compatibility warnings on stderr.
+# PYTHONBREAKPOINT: if this variable is set to 0, it disables the default
+#    debugger. It can be set to the callable of your debugger of choice.
+# PYTHONDEVMODE: enable the development mode.
+# PYTHONPYCACHEPREFIX: root directory for bytecode cache (pyc) files.
+# PYTHONWARNDEFAULTENCODING: enable opt-in EncodingWarning for 'encoding=None'.
+
+FONTFORGE_VENV            = "%s/.fontforge.venv" % os.environ["HOME"]
+FONTFORGE_VENV_BIN        = "%s/.fontforge.venv/bin" % os.environ["HOME"]
+FONTFORGE_VENV_PY         = "%s/.fontforge.venv/bin/python" % os.environ["HOME"]
+FONTFORGE_VENV_PYTHONPATH = "%s/lib/python3.10/site-packages" % FONTFORGE_VENV
+
+MACOS_FONTFORGE                 = "/Applications/FontForge.app"
+MACOS_FONTFORGE_BIN             = "/Applications/FontForge.app/Contents/Resources/opt/local/bin/fontforge"
+MACOS_FONTFORGE_PYTHONPATH      = "/Applications/FontForge.app/Contents/Resources/opt/local/lib/python3.10/site-packages"
+MACOS_FONTFORGE_LD_LIBRARY_PATH = "/Applications/FontForge.app/Contents/Resources/opt/local/lib/python3.10/site-packages:/Applications/FontForge.app/Contents/Resources/opt/local/lib"
+MACOS_FONTFORGE_LD_PRELOAD = [
+    "/Applications/FontForge.app/Contents/Resources/opt/local/lib/python3.10/site-packages/fontforge.so",
+    "/Applications/FontForge.app/Contents/Resources/opt/local/lib/python3.10/site-packages/psMat.so",
+]
+MACOS_FONTFORGE_LD_PRELOAD = " ".join(MACOS_FONTFORGE_LD_PRELOAD)
+MACOS_FONTFORGE_PYTHONHOME      = "/Applications/FontForge.app/Contents/Resources/opt/local/lib/python3.10"
+MACOS_FONTFORGE_PYTHON_BIN      = "/Applications/FontForge.app/Contents/Frameworks/Python.framework/Versions/3.10/bin/python3.10"
+
+if os.path.exists(FONTFORGE_VENV) and os.path.exists(MACOS_FONTFORGE):
+    if "FONTFORGE__VENV" not in os.environ:
+        os.environ["LD_PRELOAD"] = MACOS_FONTFORGE_LD_PRELOAD
+        os.environ["FONTFORGE__VENV"] = "1"
+        if "PYTHONPATH" in os.environ:
+            os.environ["PYTHONPATH"] = "%s:%s" % (FONTFORGE_VENV_PYTHONPATH, os.environ["PYTHONPATH"])
+        else:
+            os.environ["PYTHONPATH"] = FONTFORGE_VENV_PYTHONPATH
+        print("PYTHONPATH=%s" % os.environ["PYTHONPATH"])
+        os.execvp(MACOS_FONTFORGE_BIN, [__file__, *sys.argv])
+
+import re, argparse, unicodedata, prototxt_parser, json
+from prototxt_parser.prototxt import parse
+
+def main():
+    global args
+    parser = argparse.ArgumentParser();
+    parser.add_argument("filenames", nargs="+", metavar="filename")
+    parser.add_argument("--verbose", "-v", action="count", default=0)
+    parser.add_argument("--missing", action="store_true")
+    args = parser.parse_args()
+    is_silent = args.verbose < 2
+    for filename in args.filenames:
+        fonts_in_file = fontforge.fontsInFile(filename)
+        if len(fonts_in_file) < 2:
+            fonts = [filename]
+        else:
+            fonts = ["%s(%s)" % (filename, font_in_file) for font_in_file in fonts_in_file]
+        for filename in fonts:
+            try:
+                if is_silent: silence(True)
+                font = fontforge.open(filename)
+            except Exception as err:
+                if is_silent: silence(False)
+                raise err
+            if is_silent: silence(False)
+            print("%s:" % filename)
+            LANGS_DIR = "%s/git/googlefonts--lang/Lib/gflanguages/data/languages" % os.environ["HOME"]
+            for basename in os.listdir(LANGS_DIR):
+                filename = "%s/%s" % (LANGS_DIR, basename)
+                data_string = open(filename, encoding="utf-8").read().replace("\\'", "'")
+                if data_string[0] == "#":
+                    data_string = re.sub(r'^#[^\n]*\n', "", data_string)
+                try:
+                    data = prototxt_parser.prototxt.parse(data_string)
+                except Exception as err:
+                    print(str(err))
+                    continue
+                if data["script"] not in ["Latn", "Cyrl", "Grek"]:
+                    continue
+                print(json.dumps(data, indent=4))
+
+            font.close()
+
+stderr_fd = os.dup(2)
+def silence(flag=True):
+    global stderr_fd
+    if flag:
+        try:
+            os.close(2)
+        except OSError:
+            pass
+    else:
+        try:
+            os.dup2(stderr_fd, 2)
+        except OSError:
+            pass
+
+main()

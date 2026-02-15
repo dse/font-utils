@@ -1,0 +1,58 @@
+#!/usr/bin/env -S fontforge -quiet
+# -*- mode: python; coding: utf-8 -*-
+import os, sys, argparse, fontforge, json, math, unicodedata
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
+from font_utils import fonts_in
+
+progname = os.path.basename(__file__).split(".")[0]
+args = None
+def main():
+    global args, progname
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filenames", nargs="+")
+    parser.add_argument("--verbose", "-v", action="count", default=0)
+    args = parser.parse_args()
+
+    for font in fonts_in(args.filenames, verbose=args.verbose):
+        print("%s:" % font.path)
+        glyphs_normal  = []
+        glyphs_variant = []
+        glyphs_no_char = []
+        for glyph in font.glyphs():
+            if glyph.unicode < 0:
+                if "." in glyph.glyphname:
+                    base_glyphname = glyph.glyphname.split(".")[0]
+                    base_unicode = fontforge.unicodeFromName(base_glyphname)
+                    if base_unicode < 0:
+                        # glyphname.variant where glyphname does not refer to any character
+                        glyph.temporary = { "sort": (0x80000001, glyph.glyphname), "base_unicode": -1 }
+                        glyphs_no_char.append(glyph)
+                    else:
+                        # glyphname.variant where glyphname does refer to a character
+                        glyph.temporary = { "sort": (0x80000000, glyph.glyphname), "base_unicode": base_unicode }
+                        glyphs_variant.append(glyph)
+                else:
+                    # glyphname not referring to a character
+                    glyph.temporary = { "sort": (0x80000001, glyph.glyphname), "base_unicode": -1 }
+                    glyphs_no_char.append(glyph)
+            else:
+                # a character's default glyph
+                glyph.temporary = { "sort": (glyph.unicode, glyph.glyphname, ""), "base_unicode": glyph.unicode }
+                glyphs_normal.append(glyph)
+
+        glyphs_normal.sort(key=lambda x: x.temporary["sort"])
+        glyphs_variant.sort(key=lambda x: x.temporary["sort"])
+        glyphs_no_char.sort(key=lambda x: x.temporary["sort"])
+
+        for glyph in glyphs_normal:
+            base_unicode = glyph.temporary["base_unicode"]
+            u = "U+%04X" % base_unicode
+            print("    %-24s  %-8s  %s" % (glyph.glyphname, u, unicodedata.name(chr(base_unicode), str(base_unicode))))
+        for glyph in glyphs_variant:
+            base_unicode = glyph.temporary["base_unicode"]
+            u = "U+%04X" % base_unicode
+            print("    %-24s  %-8s  %s" % (glyph.glyphname, u, unicodedata.name(chr(base_unicode), str(base_unicode))))
+        for glyph in glyphs_no_char:
+            print("    %-24s  %-8s  %s" % (glyph.glyphname, "", ""))
+
+main()
