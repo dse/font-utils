@@ -114,7 +114,7 @@ def main():
             "os2Weight": str(font.os2_weight),
         }
 
-        print(json.dumps(expand_panose(font.os2_panose, camel=True), indent=4))
+        # print(json.dumps(expand_panose(font.os2_panose, camel=True), indent=4))
 
         if PROGNAME != 'fontinfo':
             new_row = {}
@@ -128,9 +128,9 @@ def main():
         font.close()
 
         if args.format == 'csv':
-            print(",".join([csv_value_escape(row[k]) if k in row else "" for k in field_names]))
+            print(",".join([csv_value_escape(row[k]) if k in row and row[k] is not None else "" for k in field_names]))
         elif args.format == 'tsv':
-            print("\t".join([tsv_value_escape(row[k]) if k in row else "" for k in field_names]))
+            print("\t".join([tsv_value_escape(row[k]) if k in row and row[k] is not None else "" for k in field_names]))
         elif args.format == 'text':
             print("%s:" % row["filename"])
             for k in [key for key in row.keys() if key != "filename" and key in row and row[key] is not None]:

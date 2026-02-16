@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+my %fonts;
+while (<>) {
+    s{\R\z}{};
+    my ($filename, $font_family) = split("\t");
+    push(@{$fonts{$font_family}}, $filename)
+}
+foreach my $font_family (sort keys %fonts) {
+    printf("%s\n", $font_family);
+    foreach my $filename (@{$fonts{$font_family}}) {
+        printf("    %s\n", $filename);
+    }
+}

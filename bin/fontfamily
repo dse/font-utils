@@ -1,0 +1,28 @@
+#!/usr/bin/env -S python
+# -*- mode: python; coding: utf-8 -*-
+import os
+import fontforge
+import sys, argparse, csv, json, yaml
+def main():
+    global args
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filenames', nargs='+', metavar='filename')
+    args = parser.parse_args()
+    idx = 0
+    for filename in args.filenames:
+        idx += 1
+        try:
+            sys.stderr.write("# (%d/%d) opening %s ...\n" % (idx, len(args.filenames), filename))
+            font = fontforge.open(filename, ("fstypepermitted","fontlint","alltables"))
+        except OSError as e:
+            msg = e.args[0]
+            if msg == "Open failed":
+                # occurs when file is not in a known format
+                sys.stderr.write("# invalid format for %s; continuing ...\n" % filename)
+                continue
+            raise e
+        except:
+            raise
+        print("%s\t%s" % (filename, font.familyname))
+        font.close()
+main()

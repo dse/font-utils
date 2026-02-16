@@ -39,6 +39,8 @@ def flatten(values):
     return result
 
 def tsv_value_escape(str):
+    if str is None:
+        return None
     str = str.replace("\\", "\\\\")
     str = str.replace("\t", "\\t")
     str = str.replace("\r", "\\r")
@@ -47,6 +49,8 @@ def tsv_value_escape(str):
 
 # excel dialect
 def csv_value_escape(str):
+    if str is None:
+        return None
     if '"' not in str and ',' not in str and '\r' not in str and '\n' not in str:
         return str
     str = str.replace('"', '""')
