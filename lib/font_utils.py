@@ -1,4 +1,4 @@
-import os, re
+import os, re, unicodedata
 from silence import silence
 from types import SimpleNamespace
 
@@ -255,3 +255,41 @@ for visual separation.
         raise Exception("GA: invalid argument type")
     g.clear()
     return [g]
+
+def u(codepoint, pad=False):
+    result = None
+    if codepoint < 0:
+        result = "%d" % codepoint
+    else:
+        result = "U+%04X" % codepoint
+    if pad:
+        result = "%-8s" % result
+    return result
+
+def parse_codepoint_argument(param, default=Exception, as=int):
+    if type(param) == int:
+        if param not in range(0, 0x110000):
+            if default is Exception:
+                raise ValueError("invalid codepoint: %s" % repr(param))
+            return default
+        return param
+    if type(param) == float:
+        if param != round(param):
+            if default is Exception:
+                raise ValueError("float codepoint must be an integer: %s" % repr(param))
+            return default
+        return parse_codepoint_argument(int(param), default=default)
+    if type(param) == str:
+        if len(str) == 1:
+            return parse_codepoint_argument(ord(param), default=default)
+        if match := re.fullmatch('(?:u\+?|0?x)([0-9a-f]+)', param, re.IGNORECASE):
+            return parse_codepoint_argument(int(match[1], 16), default=default)
+        try:
+            return ord(unicodedata.lookup(param))
+        except ValueError:
+            if default is Exception:
+                raise ValueError("invalid character name: %s" % repr(param))
+            return default
+    if default is Exception:
+        raise TypeError("invalid argument type, must be int, float, or str; got %s" % repr(type(param)))
+    return default
