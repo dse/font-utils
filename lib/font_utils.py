@@ -1,4 +1,5 @@
-import os, re, unicodedata
+# -*- comment-column: 80; fill-column: 132 -*-
+import os, re, unicodedata, fontforge
 from silence import silence
 from types import SimpleNamespace
 
@@ -266,33 +267,44 @@ def u(codepoint, pad=False):
         result = "%-8s" % result
     return result
 
-def parse_codepoint_argument(param, default=Exception, as_type=int):
+def parse_codepoint_argument(param, default=Exception, as_type=int, orig_param=None):
+    if orig_param is None:
+        orig_param = param
     if as_type not in [str, int]:
         raise Exception("as_type must be str or int")
+    kwargs = {
+        "default": default,
+        "as_type": as_type,
+        "orig_param": orig_param,
+    }
     if type(param) == int:
         if param not in range(0, 0x110000):
             if default is Exception:
-                raise ValueError("invalid codepoint: %s" % repr(param))
+                raise ValueError("invalid codepoint: %s" % repr(orig_param))
             return default
         return param if as_type is int else chr(param)
     if type(param) == float:
         if param != round(param):
             if default is Exception:
-                raise ValueError("float codepoint must be an integer: %s" % repr(param))
+                raise ValueError("float codepoint must be integer: %s" % repr(orig_param))
             return default
-        return parse_codepoint_argument(int(param), default=default, as_type=as_type)
+        return parse_codepoint_argument(int(param), **kwargs)
     if type(param) == str:
         if len(str) == 1:
-            return parse_codepoint_argument(ord(param), default=default, as_type=as_type)
+            return parse_codepoint_argument(ord(param), **kwargs)
         if match := re.fullmatch('(?:u\+?|0?x)([0-9a-f]+)', param, re.IGNORECASE):
-            return parse_codepoint_argument(int(match[1], 16), default=default, as_type=as_type)
+            return parse_codepoint_argument(int(match[1], 16), **kwargs)
         try:
-            char = unicodedata.lookup(param)
+            char = unicodedata.lookup(param.upper())
             return char if as_type is str else ord(char)
         except ValueError:
-            if default is Exception:
-                raise ValueError("invalid character name: %s" % repr(param))
-            return default
+            pass
+        codepoint = fontforge.unicodeFromName(param)
+        if codepoint >= 0:
+            return parse_codepoint_argument(codepoint, **kwargs)
+        if default is Exception:
+            raise ValueError("invalid character name: %s" % repr(orig_param))
+        return default
     if default is Exception:
         raise TypeError("invalid argument type, must be int, float, or str; got %s" % repr(type(param)))
     return default
