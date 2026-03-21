@@ -266,26 +266,29 @@ def u(codepoint, pad=False):
         result = "%-8s" % result
     return result
 
-def parse_codepoint_argument(param, default=Exception, as=int):
+def parse_codepoint_argument(param, default=Exception, as_type=int):
+    if as_type not in [str, int]:
+        raise Exception("as_type must be str or int")
     if type(param) == int:
         if param not in range(0, 0x110000):
             if default is Exception:
                 raise ValueError("invalid codepoint: %s" % repr(param))
             return default
-        return param
+        return param if as_type is int else chr(param)
     if type(param) == float:
         if param != round(param):
             if default is Exception:
                 raise ValueError("float codepoint must be an integer: %s" % repr(param))
             return default
-        return parse_codepoint_argument(int(param), default=default)
+        return parse_codepoint_argument(int(param), default=default, as_type=as_type)
     if type(param) == str:
         if len(str) == 1:
-            return parse_codepoint_argument(ord(param), default=default)
+            return parse_codepoint_argument(ord(param), default=default, as_type=as_type)
         if match := re.fullmatch('(?:u\+?|0?x)([0-9a-f]+)', param, re.IGNORECASE):
-            return parse_codepoint_argument(int(match[1], 16), default=default)
+            return parse_codepoint_argument(int(match[1], 16), default=default, as_type=as_type)
         try:
-            return ord(unicodedata.lookup(param))
+            char = unicodedata.lookup(param)
+            return char if as_type is str else ord(char)
         except ValueError:
             if default is Exception:
                 raise ValueError("invalid character name: %s" % repr(param))
