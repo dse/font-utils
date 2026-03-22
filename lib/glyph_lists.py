@@ -3,6 +3,7 @@ __all__ = [
     "AGLFN",
     "AGL",
     "W1G",
+    "CP437",
     "WGL4_PRIVATE_USE",
     "ZAPF_DINGBATS",
     "SECS",
@@ -13,6 +14,7 @@ from glyph_list_wgl4          import WGL4, WGL4_PRIVATE_USE
 from glyph_list_w1g           import W1G
 from glyph_list_aglfn         import AGLFN
 from glyph_list_agl           import AGL
+from glyph_list_cp437         import CP437
 from glyph_list_zapf_dingbats import ZAPF_DINGBATS
 from glyph_list_secs          import SECS
 from glyph_list_mes_1         import MES_1
