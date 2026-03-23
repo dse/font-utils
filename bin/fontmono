@@ -24,6 +24,14 @@ class Exactness(Enum):
             return "all glyphs are close"
         if value == Exactness.MOST_GLYPHS_ARE_CLOSE:
             return "most glyphs are close"
+    @classmethod
+    def shortnameof(cls, value):
+        if value == Exactness.EXACT:
+            return "exact"
+        if value == Exactness.ALL_GLYPHS_ARE_CLOSE:
+            return "close"
+        if value == Exactness.MOST_GLYPHS_ARE_CLOSE:
+            return "kinda"
 
 def main():
     global args
@@ -42,20 +50,11 @@ def main():
             if spacing_type == FontSpacing.PROPORTIONAL:
                 spacing_type = get_font_spacing_type(font, confidence=0.95, fudge=1.01)
                 exactness = Exactness.MOST_GLYPHS_ARE_CLOSE
-        print("%s:" % filename)
-        print("    %-12s" % FontSpacing.nameof(spacing_type), end="")
-        if spacing_type != FontSpacing.PROPORTIONAL:
-            if exactness != Exactness.EXACT:
-                print("  (%s)" % Exactness.nameof(exactness), end="")
-        if spacing_type == FontSpacing.PROPORTIONAL:
-            glyphs = [g for g in font.glyphs() if g.unicode >= 0 and g.width]
-            width_counts = {}
-            for g in glyphs:
-                width_counts[g.width] = width_counts.get(g.width,0) + 1
-            widths = list(set(width_counts.keys()))
-            widths.sort(key=lambda w:width_counts[w], reverse=True)
-            print(" [%s]" % "; ".join(["%d: %d" % (w, width_counts[w]) for w in widths[0:4]]), end="")
-        print("")
+        print("%-4s  %-4s  %s" % (
+            FontSpacing.shortnameof(spacing_type),
+            Exactness.shortnameof(exactness),
+            filename
+        ))
 
 main()
 
