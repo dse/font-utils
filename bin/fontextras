@@ -1,0 +1,36 @@
+#!/usr/bin/env -S fontforge -quiet
+# -*- mode: python; coding: utf-8 -*-
+import os, sys, argparse, fontforge, unicodedata
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
+from font_utils import fonts_in, u
+from glyph_lists import WGL4, AGLFN, AGL, W1G, SECS, CP437, MES_1, MES_2, MES_3B
+def main():
+    global args
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filenames", nargs="+")
+    args = parser.parse_args()
+    for fontx in fonts_in(args.filenames, names=True):
+        font = fontx.font
+        fontname = fontx.fontname
+        print("%s:" % fontname)
+        def glyph_sort_fn(glyph):
+            if glyph.unicode >= 0:
+                return (0, glyph.unicode)
+            return (1,)
+        glyphs = [glyph for glyph in font.glyphs() if glyph.unicode >= 0]
+        glyphs.sort(key=glyph_sort_fn)
+        for glyph in glyphs:
+            if glyph.unicode >= 0 and glyph.unicode not in [*WGL4,
+                                                            *AGLFN,
+                                                            *AGL,
+                                                            *W1G,
+                                                            *CP437,
+                                                            *MES_1,
+                                                            *MES_2,
+                                                            *MES_3B,
+                                                            *SECS]:
+                print("    %-8s  %s  %-24s  %s" % (u(glyph.unicode),
+                                                   chr(glyph.unicode),
+                                                   glyph.glyphname,
+                                                   unicodedata.name(chr(glyph.unicode), "-")))
+main()
