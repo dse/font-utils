@@ -1,0 +1,161 @@
+#!/usr/bin/env perl
+use warnings;
+use strict;
+use Font::TTF::Font;
+use Unicode::UCD qw(charscript charinfo charblock);
+use Data::Dumper qw(Dumper);
+use List::Util qw(uniq);
+use HTML::Entities qw(encode_entities);
+use open IO => ":locale";
+foreach my $filename (@ARGV) {
+    if ($filename =~ /\.sfd$/) {
+        my $fh;
+        open($fh, "<", $filename) or die("$filename: $!\n");
+        my @codepoints;
+        while (<$fh>) {
+            s{\R\z}{};
+            if (/^Encoding:\s*(-?\d+)\s+(-?\d+)\s+(-?\d+)/) {
+                my $unicode = $2;
+                next if $unicode < 0;
+                push(@codepoints, $unicode);
+            }
+        }
+        @codepoints = sort { $a <=> $b } @codepoints;
+        my %letters;
+        my %scripts;
+        my @gc_unknown;
+        my @numbers;
+        my @punct_conn;
+        my @punct_dash;
+        my @punct_open;
+        my @punct_close;
+        my @punct_initial;
+        my @punct_final;
+        my @punct_other;
+        my @sym_math;
+        my @sym_currency;
+        my @sym_modifier;
+        my @sym_other;
+        my @ipa;
+        my @braille;
+        my @box;
+        my @block;
+        my @retro;
+        my @small_caps;
+        foreach my $codepoint (@codepoints) {
+            my $script = charscript($codepoint);
+            my $charinfo = charinfo($codepoint);
+            my $gc = defined $charinfo ? $charinfo->{category} : undef;
+            my $charblock = charblock($codepoint);
+            my $charname = defined $charinfo ? $charinfo->{name} : "";
+
+            my $is_small_cap = $charname =~ /^LATIN LETTER SMALL CAPITAL \S$/ || $codepoint == 0xef11;
+
+            if ($charblock eq "IPA Extensions") {
+                push(@ipa, $codepoint);
+            } elsif ($charblock eq "Braille Patterns") {
+                push(@braille, $codepoint);
+            } elsif ($charblock eq "Box Drawing") {
+                push(@box, $codepoint);
+            } elsif ($charblock eq "Block Elements") {
+                push(@block, $codepoint);
+            } elsif ($charblock eq "Symbols for Legacy Computing") {
+                push(@retro, $codepoint);
+            } elsif (defined $script && $script ne "Common" && $script ne "Unknown") {
+                if (!$is_small_cap) {
+                    if (substr($gc, 0, 1) eq "L") {
+                        push(@{$letters{$script}}, $codepoint);
+                    } else {
+                        push(@{$scripts{$script}}, $codepoint);
+                    }
+                }
+            } elsif (!defined $gc) {
+                push(@gc_unknown, $codepoint);
+            } elsif (substr($gc, 0, 1) eq "N") {
+                push(@numbers, $codepoint);
+            } elsif ($gc eq "Pc") {
+                push(@punct_conn, $codepoint);
+            } elsif ($gc eq "Pd") {
+                push(@punct_dash, $codepoint);
+            } elsif ($gc eq "Ps") {
+                push(@punct_open, $codepoint);
+            } elsif ($gc eq "Pe") {
+                push(@punct_close, $codepoint);
+            } elsif ($gc eq "Pi") {
+                push(@punct_initial, $codepoint);
+            } elsif ($gc eq "Pf") {
+                push(@punct_final, $codepoint);
+            } elsif ($gc eq "Po") {
+                push(@punct_other, $codepoint);
+            } elsif ($gc eq "Sm") {
+                push(@sym_math, $codepoint);
+            } elsif ($gc eq "Sc") {
+                push(@sym_currency, $codepoint);
+            } elsif ($gc eq "Sk") {
+                push(@sym_modifier, $codepoint);
+            } elsif ($gc eq "So") {
+                push(@sym_other, $codepoint);
+            }
+            if ($is_small_cap) {
+                # how did I put small cap X in PUA?
+                push(@small_caps, $codepoint);
+            }
+        }
+        print_char_type("Latin", @{$letters{Latin}});
+        print_char_type("Latin (other)", @{$scripts{Latin}});
+        print_char_type("Cyrillic", @{$letters{Cyrillic}});
+        print_char_type("Cyrillic (other)", @{$scripts{Cyrillic}});
+        print_char_type("Greek", @{$letters{Greek}});
+        print_char_type("Greek (other)", @{$scripts{Greek}});
+        foreach my $script (uniq sort { $a cmp $b } grep { $_ ne "Latin" && $_ ne "Greek" && $_ ne "Cyrillic" }
+                            (keys %letters, keys %scripts)) {
+            print_char_type("$script", @{$letters{$script}});
+            print_char_type("$script (other)", @{$scripts{$script}});
+        }
+        print_char_type("Numbers", @numbers);
+        print_char_type("Punctuation (connector)", @punct_conn);
+        print_char_type("Punctuation (dash)", @punct_dash);
+        print_char_type("Punctuation (open)", @punct_open);
+        print_char_type("Punctuation (close)", @punct_close);
+        print_char_type("Punctuation (initial)", @punct_initial);
+        print_char_type("Punctuation (final)", @punct_final);
+        print_char_type("Punctuation (other)", @punct_other);
+        print_char_type("Symbols (math)", @sym_math);
+        print_char_type("Symbols (currency)", @sym_currency);
+        print_char_type("Symbols (modifier)", @sym_modifier);
+        print_char_type("Symbols (other)", @sym_other);
+        print_char_type("IPA", @ipa);
+        print_char_type("Braille", @braille);
+        print_char_type("Box Drawing", @box);
+        print_char_type("Block Elements", @block);
+        print_char_type("Legacy Computing", @retro);
+        print_char_type("Small Caps", @small_caps);
+        print_char_type("Miscellaneous", @gc_unknown);
+    }
+}
+
+sub print_char_type {
+    my ($heading, @codepoints) = @_;
+    @codepoints = grep { !($_ >= 0 && $_ <= 31) &&
+                           !($_ >= 127 && $_ <= 159) } @codepoints;
+    return if !scalar @codepoints;
+
+    printf("<section class=\"specimen-section\">\n");
+    printf("    <div class=\"specimen-section__row\">\n");
+    printf("        <div class=\"specimen-section__header\">\n");
+    printf("            <h2>%s</h2>\n",
+           encode_entities($heading));
+    printf("        </div>\n");
+    printf("        <div class=\"specimen-section__body\">\n");
+    printf("            <div class=\"char-list\">\n");
+    foreach my $codepoint (@codepoints) {
+        printf("                <span title=\"U+%04X %s\" class=\"char-list__char\">%s</span>\n",
+               $codepoint,
+               eval { charinfo($codepoint)->{name} } // "(no name)",
+               encode_entities(chr($codepoint)));
+    }
+    printf("            </div>\n");
+    printf("        </div>\n");
+    printf("    </div>\n");
+    printf("</section>\n");
+}
