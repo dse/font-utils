@@ -1,0 +1,77 @@
+#!/usr/bin/env -S fontforge -quiet
+# -*- mode: python; coding: utf-8 -*-
+import os, sys, argparse, fontforge, unicodedata
+sys.path.append("%s/git/dse.d/my-python/src/my_python_dse" % os.getenv("HOME"))
+from font_utils import fonts_in, get_font_count, u, get_base_codepoint
+from glyph_lists import COMBINED_GLYPH_LIST
+def main():
+    global args
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filenames", nargs="+")
+    parser.add_argument("-e", "--extras", action="store_true")
+    parser.add_argument("-n", "--names", action="store_true")
+    parser.add_argument("-a", "--adobe", "--adobe-names", "--adobe-glyph-names", action="store_true")
+    parser.add_argument("-d", "--decimal", action="store_true")
+    parser.add_argument("-o", "--octal", action="store_true")
+    parser.add_argument("-v", "--variants", action="store_true")
+    args = parser.parse_args()
+    font_count = len(list(get_font_count(args.filenames)))
+    for fontx in fonts_in(args.filenames, names=True):
+        font = fontx.font
+        fontname = fontx.fontname
+        if font_count > 1:
+            print("%s:" % fontname)
+        codepoints = sorted(list(set([g.unicode for g in font.glyphs() if g.unicode >= 0])))
+        def get_output_line(param):
+            codepoint = None
+            if type(param) == int:
+                glyph = None
+                codepoint = param
+            elif type(param) == fontforge.glyph:
+                glyph = param
+                codepoint = get_base_codepoint(glyph)
+            line = "" if font_count <= 1 else "    "
+            line += u(codepoint, pad=True)
+            if args.adobe:
+                if glyph is not None and glyph.unicode < 0:
+                    line += " %-24s" % glyph.glyphname
+                else:
+                    line += " %-24s" % fontforge.nameFromUnicode(codepoint)
+            if args.decimal:
+                if codepoint < 0:
+                    line += " %7s" % "-"
+                else:
+                    line += " %7d" % codepoint
+            if args.octal:
+                if codepoint < 0:
+                    line += " %8s" % "-"
+                else:
+                    line += " %8s" % ("0%o" % codepoint)
+            if args.names:
+                if codepoint < 0:
+                    line += " (none)"
+                else:
+                    try:
+                        line += " " + unicodedata.name(chr(codepoint))
+                    except ValueError:
+                        pass
+            return line
+        for codepoint in codepoints:
+            if args.extras and codepoint in COMBINED_GLYPH_LIST:
+                continue
+            print(get_output_line(codepoint))
+        if args.variants:
+            def sort_key_fn(g):
+                base_codepoint = get_base_codepoint(g)
+                if base_codepoint >= 0:
+                    if "." not in g.glyphname:
+                        return (0, base_codepoint)
+                    return (1, base_codepoint, g.glyphname)
+                return (2, -1, g.glyphname)
+            variants = sorted([g for g in font.glyphs() if g.unicode < 0], key=sort_key_fn)
+            for variant in variants:
+                if args.extras and codepoint in COMBINED_GLYPH_LIST:
+                    continue
+                print(get_output_line(variant))
+
+main()
