@@ -5,7 +5,7 @@ import os, sys, argparse
 from enum import Enum
 
 sys.path.append("%s/git/dse.d/my-python/src/my_python_dse" % os.environ["HOME"])
-from font_utils import silence, fonts_in, u
+from font_utils import silence, get_fonts_in, u
 from font_spacing_utils import get_font_spacing_type, FontSpacing
 
 silence.on()
@@ -39,7 +39,7 @@ def main():
     parser.add_argument('filenames', nargs='+', metavar='filename')
     args = parser.parse_args()
 
-    for font_data in fonts_in(args.filenames, names=True):
+    for font_data in get_fonts_in(args.filenames, names=True):
         font = font_data.font
         filename = font_data.filename_open
         spacing_type = get_font_spacing_type(font)

@@ -83,7 +83,7 @@ def silence(flag=True):
         except OSError:
             pass
 
-def fonts_in(filenames):
+def get_fonts_in(filenames):
     for filename in filenames:
         fonts_in_file = fontforge.fontsInFile(filename)
         if len(fonts_in_file) < 2:

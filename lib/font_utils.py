@@ -121,16 +121,16 @@ occurrence of '{}' (e.g., '/home/xyz/{}.ttf')""")
 
 is_silent = None
 
-def fonts_in(filenames, close=True, verbose=0, ttc=True, open_font=True, names=False):
+def get_fonts_in(filenames, close=True, verbose=0, ttc=True, open_font=True, names=False):
     if not open_font and not names:
-        raise Exception("fonts_in without open_font or names does not make sense")
+        raise Exception("get_fonts_in without open_font or names does not make sense")
     global is_silent
     if is_silent is None:
         is_silent = verbose < 2
     for filename in filenames:
         fonts_in_file = fontforge.fontsInFile(filename)
         if (not ttc) and len(fonts_in_file) >= 2:
-            raise Exception("fonts_in: .ttc files not supported when ttc=%s is specified" % repr(ttc))
+            raise Exception("get_fonts_in: .ttc files not supported when ttc=%s is specified" % repr(ttc))
         font_structs = []
         if len(fonts_in_file) < 2:
             font_structs = [SimpleNamespace(

@@ -2,14 +2,14 @@
 # -*- mode: python; coding: utf-8 -*-
 import os, sys, argparse, fontforge, unicodedata
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
-from font_utils import fonts_in, u
+from font_utils import get_fonts_in, u
 from glyph_lists import WGL4, AGLFN, AGL, W1G, SECS, CP437, MES_1, MES_2, MES_3B
 def main():
     global args
     parser = argparse.ArgumentParser()
     parser.add_argument("filenames", nargs="+")
     args = parser.parse_args()
-    for fontx in fonts_in(args.filenames, names=True):
+    for fontx in get_fonts_in(args.filenames, names=True):
         font = fontx.font
         fontname = fontx.fontname
         print("%s:" % fontname)

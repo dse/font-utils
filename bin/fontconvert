@@ -3,7 +3,7 @@
 import os, sys, argparse, re
 import operator
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
-from font_utils import fonts_in
+from font_utils import get_fonts_in
 
 args = None
 def main():
@@ -13,7 +13,7 @@ def main():
     parser.add_argument("dest_filenames", nargs="*")
     args = parser.parse_args()
     getter = operator.attrgetter('font', 'filename_open', 'filename_noext', 'ttc')
-    for struct in fonts_in([args.source_filename], names=True, ttc=True):
+    for struct in get_fonts_in([args.source_filename], names=True, ttc=True):
         (font, filename_open, filename_noext, is_ttc) = getter(struct)
         print("%s:" % filename_open)
         for dest_filename in args.dest_filenames:
