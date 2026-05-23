@@ -292,7 +292,7 @@ def parse_codepoint_argument(param, default=Exception, as_type=int, orig_param=N
     if type(param) == str:
         if len(str) == 1:
             return parse_codepoint_argument(ord(param), **kwargs)
-        if match := re.fullmatch('(?:u\+?|0?x)([0-9a-f]+)', param, re.IGNORECASE):
+        if match := re.fullmatch(r'(?:u\+?|0?x)([0-9a-f]+)', param, re.IGNORECASE):
             return parse_codepoint_argument(int(match[1], 16), **kwargs)
         try:
             char = unicodedata.lookup(param.upper())
