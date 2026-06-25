@@ -37,7 +37,10 @@ def main():
             if progname == "fontfamily":
                 print("%-40s  %s" % (font.familyname, visible_filename))
             elif progname == "fontname":
-                print("%-40s  %s" % (font.fontname, visible_filename))
+                if (len(font.fontname) > 29):
+                    print("%-40s  %s  (PAST SUGGESTED 29 CHARACTER LIMIT)" % (font.fontname, visible_filename))
+                else:
+                    print("%-40s  %s" % (font.fontname, visible_filename))
             elif progname == "fontfullname":
                 print("%-40s  %s" % (font.fullname, visible_filename))
             elif progname == "fontweight":
