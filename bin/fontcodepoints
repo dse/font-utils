@@ -1,4 +1,4 @@
-#!/usr/bin/env -S fontforge -quiet
+#!/usr/bin/env -S fontforge -quiet -lang=py -script
 # -*- mode: python; coding: utf-8 -*-
 import os, sys, argparse, fontforge, unicodedata
 sys.path.append("%s/git/dse.d/my-python/src/my_python_dse" % os.getenv("HOME"))
