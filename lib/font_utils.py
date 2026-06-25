@@ -267,6 +267,37 @@ def u(codepoint, pad=False):
         result = "%-8s" % result
     return result
 
+def parse_char_str(glyphname, default=Exception):
+    if "." in glyphname:
+        (base_glyphname, variant) = glyphname.split(".", 1)
+    elif "--" in glyphname:
+        (base_glyphname, variant) = glyphname.split("--", 1)
+    else:
+        base_glyphname = glyphname
+        variant = None
+    if len(base_glyphname) == 1:
+        base_codepoint = ord(base_glyphname[0])
+    elif match := re.match(r'(?:0?x|u\+?|uni)([0-9a-f]+)', base_glyphname, flags=re.I):
+        base_codepoint = int(match[1], 16)
+    elif fontforge.unicodeFromName(base_glyphname) >= 0:
+        base_codepoint = fontforge.unicodeFromName(base_glyphname)
+    elif unicodedata_lookup(base_glyphname, None) is not None:
+        base_codepoint = ord(unicodedata_lookup(base_glyphname, None))
+    elif default is Exception:
+        raise Exception("invalid character name: %s" % repr(glyphname))
+    else:
+        return default
+    codepoint = -1 if variant is None else base_codepoint
+    base_glyphname = fontforge.nameFromUnicode(base_codepoint)
+    glyphname = base_glyphname if variant is None else base_glyphname + "." + variant
+    return (codepoint, glyphname, base_codepoint, base_glyphname, variant)
+
+def unicodedata_lookup(name, default=None):
+    try:
+        return unicodedata.lookup(name)
+    except KeyError:
+        return default
+
 def parse_codepoint_argument(param, default=Exception, as_type=int, orig_param=None):
     if orig_param is None:
         orig_param = param
