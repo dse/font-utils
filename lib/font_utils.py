@@ -267,7 +267,28 @@ def u(codepoint, pad=False):
         result = "%-8s" % result
     return result
 
-def parse_char_str(glyphname, default=Exception):
+def parse_char_str(glyphname, default=Exception, aliases=None):
+    orig_glyphname_arg = glyphname
+
+    def default_value():
+        if default == tuple([None]):
+            return (None, None, None, None, None)
+        elif default == tuple([-1]):
+            return (-1, "", -1, "", None)
+        else:
+            return default
+
+    if type(glyphname) is int:
+        glyphname = "0x%04x" % glyphname
+    elif type(glyphname) is float:
+        glyphname = "0x%04x" % round(glyphname)
+    elif type(glyphname) is str:
+        pass
+    else:
+        if default is Exception:
+            raise TypeError("invalid argument type; must be int, float, or str")
+        return default_value()
+
     if "." in glyphname:
         (base_glyphname, variant) = glyphname.split(".", 1)
     elif "--" in glyphname:
@@ -275,6 +296,7 @@ def parse_char_str(glyphname, default=Exception):
     else:
         base_glyphname = glyphname
         variant = None
+
     if len(base_glyphname) == 1:
         base_codepoint = ord(base_glyphname[0])
     elif match := re.match(r'(?:0?x|u\+?|uni)([0-9a-f]+)', base_glyphname, flags=re.I):
@@ -283,10 +305,13 @@ def parse_char_str(glyphname, default=Exception):
         base_codepoint = fontforge.unicodeFromName(base_glyphname)
     elif unicodedata_lookup(base_glyphname, None) is not None:
         base_codepoint = ord(unicodedata_lookup(base_glyphname, None))
+    elif aliases is not None and type(aliases) is dict and base_glyphname in aliases:
+        base_codepoint = aliases[base_glyphname]
     elif default is Exception:
-        raise Exception("invalid character name: %s" % repr(glyphname))
+        raise Exception("invalid character name: %s" % repr(orig_glyphname_arg))
     else:
-        return default
+        return default_value()
+
     codepoint = base_codepoint if variant is None else -1
     base_glyphname = fontforge.nameFromUnicode(base_codepoint)
     glyphname = base_glyphname if variant is None else base_glyphname + "." + variant
