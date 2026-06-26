@@ -298,7 +298,13 @@ def unicodedata_lookup(name, default=None):
     except KeyError:
         return default
 
-def parse_codepoint_argument(param, default=Exception, as_type=int, orig_param=None):
+def unicodedata_name(char, default=None):
+    try:
+        return unicodedata.name(char)
+    except ValueError:
+        return default
+
+def parse_codepoint_argument(param, default=Exception, as_type=int, orig_param=None, aliases=None):
     if orig_param is None:
         orig_param = param
     if as_type not in [str, int]:
@@ -308,33 +314,57 @@ def parse_codepoint_argument(param, default=Exception, as_type=int, orig_param=N
         "as_type": as_type,
         "orig_param": orig_param,
     }
+
     if type(param) == int:
         if param not in range(0, 0x110000):
             if default is Exception:
                 raise ValueError("invalid codepoint: %s" % repr(orig_param))
             return default
         return param if as_type is int else chr(param)
+
     if type(param) == float:
         if param != round(param):
             if default is Exception:
                 raise ValueError("float codepoint must be integer: %s" % repr(orig_param))
             return default
         return parse_codepoint_argument(int(param), **kwargs)
+
     if type(param) == str:
-        if len(str) == 1:
+
+        # SINGLE CHARACTER
+
+        if len(param) == 1:
             return parse_codepoint_argument(ord(param), **kwargs)
+
+        # HEX CODE A LA "U+1F4A9", "0x1f4a9", "uni1f4a9", "u1f4a9", etc.
+
         if match := re.fullmatch(r'(?:u\+?|0?x)([0-9a-f]+)', param, re.IGNORECASE):
             return parse_codepoint_argument(int(match[1], 16), **kwargs)
+
+        # UNICODE CHARACTER NAME
+
         try:
             char = unicodedata.lookup(param.upper())
             return char if as_type is str else ord(char)
-        except ValueError:
+        except KeyError:
             pass
+
+        # ADOBE GLYPH NAME
+
         codepoint = fontforge.unicodeFromName(param)
         if codepoint >= 0:
             return parse_codepoint_argument(codepoint, **kwargs)
+
+        # ALIAS
+
+        if aliases is not None and type(aliases) is dict and param in aliases:
+            return parse_codepoint_argument(aliases[param], **kwargs)
+
+        # FALLBACK
+
         if default is Exception:
             raise ValueError("invalid character name: %s" % repr(orig_param))
+
         return default
     if default is Exception:
         raise TypeError("invalid argument type, must be int, float, or str; got %s" % repr(type(param)))
