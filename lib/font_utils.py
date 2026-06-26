@@ -287,7 +287,7 @@ def parse_char_str(glyphname, default=Exception):
         raise Exception("invalid character name: %s" % repr(glyphname))
     else:
         return default
-    codepoint = -1 if variant is None else base_codepoint
+    codepoint = base_codepoint if variant is None else -1
     base_glyphname = fontforge.nameFromUnicode(base_codepoint)
     glyphname = base_glyphname if variant is None else base_glyphname + "." + variant
     return (codepoint, glyphname, base_codepoint, base_glyphname, variant)
