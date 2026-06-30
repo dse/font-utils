@@ -299,14 +299,14 @@ def parse_char_str(glyphname, default=Exception, aliases=None):
 
     if len(base_glyphname) == 1:
         base_codepoint = ord(base_glyphname[0])
-    elif match := re.match(r'(?:0?x|u\+?|uni)([0-9a-f]+)', base_glyphname, flags=re.I):
+    elif match := re.fullmatch(r'(?:0?x|u\+?|uni)([0-9a-f]+)', base_glyphname, flags=re.I):
         base_codepoint = int(match[1], 16)
     elif fontforge.unicodeFromName(base_glyphname) >= 0:
         base_codepoint = fontforge.unicodeFromName(base_glyphname)
     elif unicodedata_lookup(base_glyphname, None) is not None:
         base_codepoint = ord(unicodedata_lookup(base_glyphname, None))
     elif aliases is not None and type(aliases) is dict and base_glyphname in aliases:
-        base_codepoint = aliases[base_glyphname]
+        base_codepoint = parse_char_str(aliases[base_glyphname])[2]
     elif default is Exception:
         raise Exception("invalid character name: %s" % repr(orig_glyphname_arg))
     else:
