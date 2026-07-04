@@ -1,4 +1,4 @@
-#!/usr/bin/env -S fontforge -quiet -lang=py -script
+#!/usr/bin/env fontforge -quiet -lang=py -script
 # -*- mode: python; coding: utf-8 -*-
 import os, sys, argparse, fontforge, json, math, unicodedata
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../lib")
